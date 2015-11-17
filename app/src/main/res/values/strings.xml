@@ -1,0 +1,6 @@
+<resources xmlns:xliff="http://schemas.android.com/tools">
+    <string name="app_name">MediaPlayer</string>
+    <string name="play_process"><xliff:g id="posMinute">%1$s</xliff:g>/<xliff:g id="posSecond">%2$s</xliff:g></string>
+    <string name="tv_song_name">Song name</string>
+    <string name="tv_artist">Artist</string>
+</resources>

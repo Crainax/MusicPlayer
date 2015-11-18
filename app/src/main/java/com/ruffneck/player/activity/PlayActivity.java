@@ -19,6 +19,7 @@ import com.ruffneck.player.R;
 import com.ruffneck.player.service.PlayerInterface;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.utils.FormatUtils;
+import com.ruffneck.player.utils.RuntimeUtils;
 
 
 public class PlayActivity extends AppCompatActivity {
@@ -62,8 +63,6 @@ public class PlayActivity extends AppCompatActivity {
 
     }*/
 
-    ;
-
 //    public static PlayHandler mHandler = new PlayHandler();
 
     @Override
@@ -76,9 +75,19 @@ public class PlayActivity extends AppCompatActivity {
         //Initialize the SharedPreference.
         mPref = getSharedPreferences("config", MODE_PRIVATE);
 
+        startAndBindService();
+
         //Initialize the button and all the views.
         initView();
 
+
+    }
+
+
+    /**
+     * Start and bind the PlayService to get the Accessibility to use the service's methods.
+     */
+    private void startAndBindService() {
         Intent serviceIntent = new Intent(this, PlayerService.class);
         startService(serviceIntent);
         conn = new MusicServiceConnection();
@@ -91,7 +100,7 @@ public class PlayActivity extends AppCompatActivity {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(PlayerService.ACTION_UPDATE);
-        registerReceiver(progressReceiver,filter);
+        registerReceiver(progressReceiver, filter);
     }
 
     @Override
@@ -120,24 +129,33 @@ public class PlayActivity extends AppCompatActivity {
     private void initView() {
         bt_pause = (Button) findViewById(R.id.bt_pause);
 
-        if (mPref.getInt("state", PlayerService.STATE_STOP) == PlayerService.STATE_PLAYING)
-            bt_pause.setText("暂停");
-        else
-            bt_pause.setText("播放");
+        //Judge from the service state to set the button's text.
+        if (RuntimeUtils.isServiceRunning(this, PlayerService.class))
+            if (player.isPlaying())
+                bt_pause.setText(getString(R.string.bt_pause));
+
 
         bt_pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (mPref.getInt("state", PlayerService.STATE_STOP)) {
-                    case PlayerService.STATE_PLAYING:
-                        player.pause();
-                        bt_pause.setText("播放");
-                        break;
-                    default:
-                        player.play();
-                        bt_pause.setText("暂停");
-                        break;
+
+                String pause = getString(R.string.bt_pause);
+                String play = getString(R.string.bt_play);
+                //if the service isn't running , and you need to start and play.
+                if (!player.isInit()) {
+                    player.play();
+                    bt_pause.setText(pause);
+                } else if (player.isPlaying()) {
+                    //If you need to pause.
+                    player.pause();
+                    bt_pause.setText(play);
+                } else {
+                    //this brunch meaning you need to continue to play the music that you pause previously.
+                    player.continuePlay();
+                    bt_pause.setText(pause);
                 }
+
+
             }
         });
 

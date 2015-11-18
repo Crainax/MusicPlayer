@@ -38,6 +38,7 @@ public class PlayerService extends Service implements PlayerInterface {
     public static final int STATE_PLAYING = 3;
     private Timer timer;
 
+    private boolean isInit = false;
 
 //    private static int state = STATE_STOP;
 
@@ -53,19 +54,24 @@ public class PlayerService extends Service implements PlayerInterface {
         public void play() {
 
             //判断是要继续播放还是要重新开始播放.
-            switch (mPref.getInt("state", STATE_STOP)) {
-                case STATE_STOP:
+//            switch (mPref.getInt("state", STATE_STOP)) {
+//                case STATE_STOP:
                     PlayerService.this.play();
-                    break;
-                case STATE_PAUSE:
-                    continuePlay();
-                    break;
-            }
+//                    break;
+//                case STATE_PAUSE:
+//                    continuePlay();
+//                    break;
+//            }
         }
 
         @Override
         public void pause() {
             PlayerService.this.pause();
+        }
+
+        @Override
+        public void continuePlay() {
+            PlayerService.this.continuePlay();
         }
 
         @Override
@@ -75,8 +81,15 @@ public class PlayerService extends Service implements PlayerInterface {
 
         @Override
         public boolean isPlaying() {
-            return false;
+            return PlayerService.this.isPlaying();
         }
+
+        @Override
+        public boolean isInit() {
+            return PlayerService.this.isInit();
+        }
+
+
     }
 
     @Override
@@ -93,6 +106,7 @@ public class PlayerService extends Service implements PlayerInterface {
     @Override
     public void play() {
         addTimer();
+        isInit = true;
         mPref.edit().putInt("state", STATE_PLAYING).apply();
         Uri myUri = Uri.fromFile(new File("sdcard/1.mp3"));
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -111,6 +125,8 @@ public class PlayerService extends Service implements PlayerInterface {
         mPref.edit().putInt("state", STATE_PAUSE).apply();
     }
 
+
+    @Override
     public void continuePlay() {
         mediaPlayer.start();
         mPref.edit().putInt("state", STATE_PLAYING).apply();
@@ -124,6 +140,11 @@ public class PlayerService extends Service implements PlayerInterface {
     @Override
     public boolean isPlaying() {
         return mediaPlayer.isPlaying();
+    }
+
+    @Override
+    public boolean isInit() {
+        return isInit;
     }
 
     @Override
@@ -144,7 +165,6 @@ public class PlayerService extends Service implements PlayerInterface {
             @Override
             public void run() {
                 Intent intent = new Intent(ACTION_UPDATE);
-                System.out.println("PlayerService.run");
                 Bundle bundle = new Bundle();
                 bundle.putInt("duration", mediaPlayer.getDuration());
                 bundle.putInt("position", mediaPlayer.getCurrentPosition());

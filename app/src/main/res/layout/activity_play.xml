@@ -12,19 +12,19 @@
         android:weightSum="3"
         android:orientation="horizontal">
         <Button
-            android:text="上一首"
+            android:text="@string/bt_previous"
             android:layout_weight="1"
             android:id="@+id/bt_previous"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <Button
-            android:text="开始"
+            android:text="@string/bt_play"
             android:layout_weight="1"
             android:id="@+id/bt_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <Button
-            android:text="下一首"
+            android:text="@string/bt_next"
             android:layout_weight="1"
             android:id="@+id/bt_next"
             android:layout_width="wrap_content"

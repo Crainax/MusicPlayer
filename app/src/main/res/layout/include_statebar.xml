@@ -38,13 +38,13 @@
                 android:id="@+id/bt_bottom_pause"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="pause" />
+                android:text="@string/bt_play" />
 
             <Button
                 android:id="@+id/bt_bottom_next"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="next" />
+                android:text="@string/bt_next" />
         </LinearLayout>
 
 

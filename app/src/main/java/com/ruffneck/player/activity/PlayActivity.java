@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -16,6 +15,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ruffneck.player.R;
+import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.PlayerInterface;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.utils.FormatUtils;
@@ -36,7 +36,9 @@ public class PlayActivity extends AppCompatActivity {
     private SharedPreferences mPref;
 
     private ProgressReceiver progressReceiver = new ProgressReceiver();
-//    private static PlayActivity pa;
+    private View.OnClickListener playOnClickListener;
+    private SeekBar.OnSeekBarChangeListener sbChangedListener;
+    //    private static PlayActivity pa;
 
 /*    public static class PlayHandler extends Handler {
 
@@ -77,65 +79,21 @@ public class PlayActivity extends AppCompatActivity {
 
         startAndBindService();
 
+        //Initialize all the listener.
+        initListener();
         //Initialize the button and all the views.
         initView();
 
 
     }
 
-
     /**
-     * Start and bind the PlayService to get the Accessibility to use the service's methods.
+     * Initialize all the listener.
      */
-    private void startAndBindService() {
-        Intent serviceIntent = new Intent(this, PlayerService.class);
-        startService(serviceIntent);
-        conn = new MusicServiceConnection();
-        bindService(serviceIntent, conn, BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(PlayerService.ACTION_UPDATE);
-        registerReceiver(progressReceiver, filter);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(progressReceiver);
-    }
-
-    /**
-     * Establish the connection to the service.
-     */
-    class MusicServiceConnection implements ServiceConnection {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            player = (PlayerInterface) service;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-        }
-
-    }
-
-
-    private void initView() {
-        bt_pause = (Button) findViewById(R.id.bt_pause);
+    private void initListener() {
 
         //Judge from the service state to set the button's text.
-        if (RuntimeUtils.isServiceRunning(this, PlayerService.class))
-            if (player.isPlaying())
-                bt_pause.setText(getString(R.string.bt_pause));
-
-
-        bt_pause.setOnClickListener(new View.OnClickListener() {
+        playOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -157,15 +115,10 @@ public class PlayActivity extends AppCompatActivity {
 
 
             }
-        });
+        };
 
-        bt_next = (Button) findViewById(R.id.bt_next);
-
-        bt_previous = (Button) findViewById(R.id.bt_next);
-
-        sb_process = (SeekBar) findViewById(R.id.sb_process);
-
-        sb_process.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        //the SeekBar's onChangedListener.
+        sbChangedListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
@@ -179,10 +132,95 @@ public class PlayActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 player.seekTo(seekBar.getProgress());
+                refreshView();
             }
-        });
+        };
+
+    }
+
+
+    /**
+     * Start and bind the PlayService to get the Accessibility to use the service's methods.
+     */
+    private void startAndBindService() {
+        Intent serviceIntent = new Intent(this, PlayerService.class);
+        startService(serviceIntent);
+        conn = new MusicServiceConnection();
+        bindService(serviceIntent, conn, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
+        registerReceiver(progressReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(progressReceiver);
+    }
+
+    /**
+     * Establish the connection to the service.
+     */
+    class MusicServiceConnection implements CallBackServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            player = (PlayerInterface) service;
+            boundCallback();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+
+        @Override
+        public void boundCallback() {
+            //refresh the button's text rely on the media player's state.
+            if (RuntimeUtils.isServiceRunning(PlayActivity.this, PlayerService.class))
+                if (player.isPlaying())
+                    bt_pause.setText(getString(R.string.bt_pause));
+            refreshView();
+        }
+    }
+
+
+    private void initView() {
+        bt_pause = (Button) findViewById(R.id.bt_pause);
+        bt_pause.setOnClickListener(playOnClickListener);
+
+
+        bt_next = (Button) findViewById(R.id.bt_next);
+
+        bt_previous = (Button) findViewById(R.id.bt_next);
+
+        sb_process = (SeekBar) findViewById(R.id.sb_process);
+        sb_process.setOnSeekBarChangeListener(sbChangedListener);
 
         tv_process = (TextView) findViewById(R.id.tv_process);
+
+        refreshView();
+    }
+
+    /**
+     * refresh the seekBar and the textView for the time rely on the sharedPreference.
+     * <br /><br />
+     * <strong>when you find that the UI doesn't fresh because the Receiver receiving the intent
+     * during it's interval,you can invoke this method.</strong>
+     */
+    private void refreshView() {
+        //refresh the seekBar and the textView for the time rely on the sharedPreference.
+        int position = mPref.getInt("position", 0);
+        int duration = mPref.getInt("duration", 0);
+        sb_process.setMax(duration);
+        sb_process.setProgress(position);
+        tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
+                FormatUtils.formatTime(duration)));
     }
 
     @Override
@@ -202,17 +240,23 @@ public class PlayActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
 
             String action = intent.getAction();
+            int position = mPref.getInt("position", 0);
+            int duration = mPref.getInt("duration", 0);
+            System.out.println("duration = " + duration);
+            System.out.println("sb_process = " + sb_process.getMax());
             switch (action) {
-                case PlayerService.ACTION_UPDATE:
-                    //Gain the date from the Sender.
-                    Bundle data = intent.getExtras();
-                    int duration = data.getInt("duration");
-                    int position = data.getInt("position");
+                case PlayerService.ACTION_UPDATE_POSITION:
+                    //Gain the date from the SharedPreference.
 
 //                    System.out.println("ProgressReceiver.onReceive");
 //                    System.out.println("position = " + position);
                     //update the UI.
                     sb_process.setProgress(position);
+                    tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
+                            FormatUtils.formatTime(duration)));
+                    break;
+                case PlayerService.ACTION_UPDATE_DURATION:
+                    //Gain the date from the SharedPreference.
                     sb_process.setMax(duration);
                     tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
                             FormatUtils.formatTime(duration)));

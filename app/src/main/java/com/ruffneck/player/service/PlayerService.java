@@ -7,7 +7,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
@@ -26,16 +25,17 @@ public class PlayerService extends Service implements PlayerInterface {
     MediaPlayer mediaPlayer;
     private SharedPreferences mPref;
 
-    public static final String ACTION_UPDATE = "com.ruffneck.player.UPDATE";
+    public static final String ACTION_UPDATE_POSITION = "com.ruffneck.player.UPDATE_POSITION";
+    public static final String ACTION_UPDATE_DURATION = "com.ruffneck.player.UPDATE_DURATION";
 
     //The mediaPlayer's state is stop , need to be start;
-    public static final int STATE_STOP = 1;
+//    public static final int STATE_STOP = 1;
 
     //The mediaPlayer's state is pause , need to be continue;
-    public static final int STATE_PAUSE = 2;
+//    public static final int STATE_PAUSE = 2;
 
     //The mediaPlayer's state is playing ,
-    public static final int STATE_PLAYING = 3;
+//    public static final int STATE_PLAYING = 3;
     private Timer timer;
 
     private boolean isInit = false;
@@ -56,7 +56,7 @@ public class PlayerService extends Service implements PlayerInterface {
             //判断是要继续播放还是要重新开始播放.
 //            switch (mPref.getInt("state", STATE_STOP)) {
 //                case STATE_STOP:
-                    PlayerService.this.play();
+            PlayerService.this.play();
 //                    break;
 //                case STATE_PAUSE:
 //                    continuePlay();
@@ -107,7 +107,7 @@ public class PlayerService extends Service implements PlayerInterface {
     public void play() {
         addTimer();
         isInit = true;
-        mPref.edit().putInt("state", STATE_PLAYING).apply();
+//        mPref.edit().putInt("state", STATE_PLAYING).apply();
         Uri myUri = Uri.fromFile(new File("sdcard/1.mp3"));
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
@@ -117,24 +117,29 @@ public class PlayerService extends Service implements PlayerInterface {
             Toast.makeText(PlayerService.this, "出现异常", Toast.LENGTH_SHORT).show();
         }
         mediaPlayer.start();
+
+        //Notify all the receiver that the duration has changed!
+        mPref.edit().putInt("duration", mediaPlayer.getDuration()).apply();
+        sendBroadcast(new Intent(ACTION_UPDATE_DURATION));
     }
 
     @Override
     public void pause() {
         mediaPlayer.pause();
-        mPref.edit().putInt("state", STATE_PAUSE).apply();
+//        mPref.edit().putInt("state", STATE_PAUSE).apply();
     }
 
 
     @Override
     public void continuePlay() {
         mediaPlayer.start();
-        mPref.edit().putInt("state", STATE_PLAYING).apply();
+//        mPref.edit().putInt("state", STATE_PLAYING).apply();
     }
 
     @Override
     public void seekTo(int process) {
         mediaPlayer.seekTo(process);
+        mPref.edit().putInt("position",process).apply();
     }
 
     @Override
@@ -153,7 +158,7 @@ public class PlayerService extends Service implements PlayerInterface {
         mediaPlayer.stop();
         mediaPlayer.release();
         mediaPlayer = null;
-        mPref.edit().putInt("state", STATE_STOP).apply();
+//        mPref.edit().putInt("state", STATE_STOP).apply();
         System.out.println("PlayerService.onDestroy");
         timer.cancel();
         timer = null;
@@ -164,14 +169,19 @@ public class PlayerService extends Service implements PlayerInterface {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Intent intent = new Intent(ACTION_UPDATE);
-                Bundle bundle = new Bundle();
-                bundle.putInt("duration", mediaPlayer.getDuration());
-                bundle.putInt("position", mediaPlayer.getCurrentPosition());
-                intent.putExtras(bundle);
+                int position = mPref.getInt("position", 0);
+                int CurrentPosition =mediaPlayer.getCurrentPosition();
+                if (position != CurrentPosition) {
+                    mPref.edit().putInt("position",CurrentPosition).apply();
+                    Intent intent = new Intent(ACTION_UPDATE_POSITION);
+//                    Bundle bundle = new Bundle();
+//                    bundle.putInt("duration", mediaPlayer.getDuration());
+//                    bundle.putInt("position", mediaPlayer.getCurrentPosition());
+//                    intent.putExtras(bundle);
 //                System.out.println("PlayerService.run");
 //                System.out.println("mediaPlayer = " + mediaPlayer.getCurrentPosition());
-                sendBroadcast(intent);
+                    sendBroadcast(intent);
+                }
             }
         }, 100, DELAY_SEND);
     }

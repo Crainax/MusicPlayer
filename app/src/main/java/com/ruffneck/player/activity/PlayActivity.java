@@ -1,8 +1,6 @@
 package com.ruffneck.player.activity;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -15,6 +13,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ruffneck.player.R;
+import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.PlayerInterface;
 import com.ruffneck.player.service.PlayerService;
@@ -35,7 +34,7 @@ public class PlayActivity extends AppCompatActivity {
     private PlayerInterface player;
     private SharedPreferences mPref;
 
-    private ProgressReceiver progressReceiver = new ProgressReceiver();
+    private PlayReceiver progressReceiver = new PlayReceiver();
     private View.OnClickListener playOnClickListener;
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
     //    private static PlayActivity pa;
@@ -234,34 +233,24 @@ public class PlayActivity extends AppCompatActivity {
     /**
      * The Receiver is used to update the current progress.
      */
-    class ProgressReceiver extends BroadcastReceiver {
+    class PlayReceiver extends ProgressReceiver {
 
         @Override
-        public void onReceive(Context context, Intent intent) {
-
-            String action = intent.getAction();
+        public void onUpdatePosition() {
             int position = mPref.getInt("position", 0);
             int duration = mPref.getInt("duration", 0);
-            System.out.println("duration = " + duration);
-            System.out.println("sb_process = " + sb_process.getMax());
-            switch (action) {
-                case PlayerService.ACTION_UPDATE_POSITION:
-                    //Gain the date from the SharedPreference.
+            sb_process.setProgress(position);
+            tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
+                    FormatUtils.formatTime(duration)));
+        }
 
-//                    System.out.println("ProgressReceiver.onReceive");
-//                    System.out.println("position = " + position);
-                    //update the UI.
-                    sb_process.setProgress(position);
-                    tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
-                            FormatUtils.formatTime(duration)));
-                    break;
-                case PlayerService.ACTION_UPDATE_DURATION:
-                    //Gain the date from the SharedPreference.
-                    sb_process.setMax(duration);
-                    tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
-                            FormatUtils.formatTime(duration)));
-                    break;
-            }
+        @Override
+        public void onUpdateDuration() {
+            int position = mPref.getInt("position", 0);
+            int duration = mPref.getInt("duration", 0);
+            sb_process.setMax(duration);
+            tv_process.setText(getString(R.string.play_process, FormatUtils.formatTime(position),
+                    FormatUtils.formatTime(duration)));
         }
 
     }

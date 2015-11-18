@@ -3,72 +3,85 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    tools:showIn="@layout/activity_main">
+    android:clickable="true"
+    android:orientation="vertical"
+    tools:showIn="@layout/activity_main"
+    android:id="@+id/statebar"
+    android:background="@android:color/white"
+    android:elevation="5dp"
+    >
 
-    <ImageView
-        android:id="@+id/iv_bottom_singer"
-        android:layout_width="64dip"
-        android:layout_height="64dip"
-        android:layout_margin="5dp"
-        android:src="@android:drawable/ic_menu_share" />
-
-    <RelativeLayout
+    <View
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="1.0px"
+        android:background="@android:color/darker_gray" />
 
-        <SeekBar
-            android:id="@+id/sb_bottom_process"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
-        <LinearLayout
-            android:id="@+id/ll_bt"
+        <ImageView
+            android:id="@+id/iv_bottom_singer"
+            android:layout_width="64dip"
+            android:layout_height="64dip"
             android:layout_margin="5dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@id/sb_bottom_process"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true">
+            android:src="@android:drawable/ic_menu_share" />
 
-            <Button
-                android:id="@+id/bt_bottom_pause"
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <SeekBar
+                android:id="@+id/sb_bottom_process"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true" />
+
+            <LinearLayout
+                android:id="@+id/ll_bt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/bt_play" />
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_below="@id/sb_bottom_process"
+                android:layout_margin="5dp">
 
-            <Button
-                android:id="@+id/bt_bottom_next"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/bt_next" />
-        </LinearLayout>
+                <Button
+                    android:id="@+id/bt_bottom_pause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bt_play" />
 
-
-        <TextView
-            android:id="@+id/tv_bottom_song_name"
-            style="@style/SongNameStyle.Bottom"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@id/sb_bottom_process"
-            android:layout_toLeftOf="@id/ll_bt"
-            android:layout_toStartOf="@id/ll_bt"
-            />
-
-        <TextView
-            style="@style/ArtistStyle.Bottom"
-            android:id="@+id/tv_bottom_artist"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@id/tv_bottom_song_name"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_toLeftOf="@id/ll_bt"
-            android:layout_toStartOf="@id/ll_bt"
-            />
+                <Button
+                    android:id="@+id/bt_bottom_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bt_next" />
+            </LinearLayout>
 
 
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/tv_bottom_song_name"
+                style="@style/SongNameStyle.Bottom"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@id/sb_bottom_process"
+                android:layout_toLeftOf="@id/ll_bt"
+                android:layout_toStartOf="@id/ll_bt" />
+
+            <TextView
+                android:id="@+id/tv_bottom_artist"
+                style="@style/ArtistStyle.Bottom"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@id/tv_bottom_song_name"
+                android:layout_toLeftOf="@id/ll_bt"
+                android:layout_toStartOf="@id/ll_bt" />
+
+
+        </RelativeLayout>
+    </LinearLayout>
 </LinearLayout>

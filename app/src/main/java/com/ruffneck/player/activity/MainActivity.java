@@ -1,11 +1,14 @@
 package com.ruffneck.player.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.LinearLayout;
 
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
@@ -20,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private ActionBar actionBar;
     private RecyclerView rv_list;
+    private LinearLayout stateBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,14 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         rv_list = (RecyclerView) findViewById(R.id.recycler_view);
+
+        stateBar = (LinearLayout) findViewById(R.id.statebar);
+        stateBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this,PlayActivity.class));
+            }
+        });
     }
 
 
@@ -78,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setDisplayHomeAsUpEnabled(true);
 
     }
+
+
 
 
 }

@@ -28,6 +28,7 @@ public class PlayerService extends Service implements PlayerInterface {
     public static final String ACTION_UPDATE_POSITION = "com.ruffneck.player.UPDATE_POSITION";
     public static final String ACTION_UPDATE_DURATION = "com.ruffneck.player.UPDATE_DURATION";
 
+
     //The mediaPlayer's state is stop , need to be start;
 //    public static final int STATE_STOP = 1;
 

@@ -95,7 +95,6 @@ public class PlayActivity extends AppCompatActivity {
         playOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 String pause = getString(R.string.bt_pause);
                 String play = getString(R.string.bt_play);
                 //if the service isn't running , and you need to start and play.
@@ -154,6 +153,7 @@ public class PlayActivity extends AppCompatActivity {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
+        filter.addAction(PlayerService.ACTION_UPDATE_DURATION);
         registerReceiver(progressReceiver, filter);
     }
 
@@ -184,6 +184,8 @@ public class PlayActivity extends AppCompatActivity {
             if (RuntimeUtils.isServiceRunning(PlayActivity.this, PlayerService.class))
                 if (player.isPlaying())
                     bt_pause.setText(getString(R.string.bt_pause));
+                else
+                    bt_pause.setText(getString(R.string.bt_play));
             refreshView();
         }
     }
@@ -233,10 +235,10 @@ public class PlayActivity extends AppCompatActivity {
     /**
      * The Receiver is used to update the current progress.
      */
-    class PlayReceiver extends ProgressReceiver {
+    private class PlayReceiver extends ProgressReceiver {
 
         @Override
-        public void onUpdatePosition() {
+        public void onUpdatePosition(Intent intent) {
             int position = mPref.getInt("position", 0);
             int duration = mPref.getInt("duration", 0);
             sb_process.setProgress(position);
@@ -245,7 +247,7 @@ public class PlayActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onUpdateDuration() {
+        public void onUpdateDuration(Intent intent) {
             int position = mPref.getInt("position", 0);
             int duration = mPref.getInt("duration", 0);
             sb_process.setMax(duration);

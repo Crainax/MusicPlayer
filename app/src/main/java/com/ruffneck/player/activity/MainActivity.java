@@ -1,20 +1,32 @@
 package com.ruffneck.player.activity;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
 import com.ruffneck.player.activity.recyclerview.MusicListAdapter;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
+import com.ruffneck.player.receiver.ProgressReceiver;
+import com.ruffneck.player.service.CallBackServiceConnection;
+import com.ruffneck.player.service.PlayerInterface;
+import com.ruffneck.player.service.PlayerService;
+import com.ruffneck.player.utils.RuntimeUtils;
 
 import java.util.List;
 
@@ -25,10 +37,30 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView rv_list;
     private LinearLayout stateBar;
 
+    private MainReceiver mainReceiver = new MainReceiver();
+    private SeekBar sb_process;
+    private SharedPreferences mPref;
+    private PlayerInterface playerInterface;
+    private MusicServiceConnection conn;
+    private TextView tv_bottom_song_name;
+    private TextView tv_bottom_artist;
+    private Button bt_pause;
+    private Button bt_next;
+
+    private View.OnClickListener playOnClickListener;
+    private SeekBar.OnSeekBarChangeListener sbChangedListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mPref = getSharedPreferences("config", MODE_PRIVATE);
+
+        //Start and bind the PlayService to get the Accessibility to use the service's methods.
+        startAndBindService();
+
+        initListener();
 
         //Find out all the views by Id.
         initViews();
@@ -37,6 +69,91 @@ public class MainActivity extends AppCompatActivity {
         initToolbar();
 
         initRecyclerView();
+    }
+
+    /**
+     * Initialize all the listener.
+     */
+    private void initListener() {
+        //Judge from the service state to set the button's text.
+        playOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String pause = getString(R.string.bt_pause);
+                String play = getString(R.string.bt_play);
+                //if the service isn't running , and you need to start and play.
+                if (!playerInterface.isInit()) {
+                    playerInterface.play();
+                    bt_pause.setText(pause);
+                } else if (playerInterface.isPlaying()) {
+                    //If you need to pause.
+                    playerInterface.pause();
+                    bt_pause.setText(play);
+                } else {
+                    //this brunch meaning you need to continue to play the music that you pause previously.
+                    playerInterface.continuePlay();
+                    bt_pause.setText(pause);
+                }
+
+
+            }
+        };
+
+        //the SeekBar's onChangedListener.
+        sbChangedListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                playerInterface.seekTo(seekBar.getProgress());
+                refreshView();
+            }
+        };
+    }
+
+
+    /**
+     * Start and bind the PlayService to get the Accessibility to use the service's methods.
+     */
+    private void startAndBindService() {
+        Intent serviceIntent = new Intent(this, PlayerService.class);
+        startService(serviceIntent);
+        conn = new MusicServiceConnection();
+        bindService(serviceIntent, conn, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
+        filter.addAction(PlayerService.ACTION_UPDATE_DURATION);
+        registerReceiver(mainReceiver, filter);
+
+        //refresh the UI including the button
+        if (playerInterface != null)
+            conn.boundCallback();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mainReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(conn);
     }
 
     /**
@@ -50,9 +167,16 @@ public class MainActivity extends AppCompatActivity {
         stateBar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,PlayActivity.class));
+                startActivity(new Intent(MainActivity.this, PlayActivity.class));
             }
         });
+        sb_process = (SeekBar) stateBar.findViewById(R.id.sb_bottom_process);
+        tv_bottom_song_name = (TextView) stateBar.findViewById(R.id.tv_bottom_song_name);
+        tv_bottom_artist = (TextView) stateBar.findViewById(R.id.tv_bottom_artist);
+        bt_pause = (Button) stateBar.findViewById(R.id.bt_bottom_pause);
+        bt_next = (Button) stateBar.findViewById(R.id.bt_next);
+        bt_pause.setOnClickListener(playOnClickListener);
+        sb_process.setOnSeekBarChangeListener(sbChangedListener);
     }
 
 
@@ -84,14 +208,56 @@ public class MainActivity extends AppCompatActivity {
 
         actionBar = getSupportActionBar();
 
-
         assert actionBar != null;
         actionBar.setTitle("Music List");
         actionBar.setDisplayHomeAsUpEnabled(true);
 
     }
 
+    private void refreshView() {
+        int position = mPref.getInt("position", 0);
+        int duration = mPref.getInt("duration", 0);
+        sb_process.setMax(duration);
+        sb_process.setProgress(position);
+    }
 
+    class MainReceiver extends ProgressReceiver {
 
+        @Override
+        public void onUpdatePosition(Intent intent) {
+            int position = mPref.getInt("position", 0);
+            sb_process.setProgress(position);
+        }
+
+        @Override
+        public void onUpdateDuration(Intent intent) {
+            int duration = mPref.getInt("duration", 0);
+            sb_process.setMax(duration);
+        }
+    }
+
+    private class MusicServiceConnection implements CallBackServiceConnection {
+
+        @Override
+        public void boundCallback() {
+            if (RuntimeUtils.isServiceRunning(MainActivity.this, PlayerService.class))
+                if (playerInterface.isPlaying())
+                    bt_pause.setText(getString(R.string.bt_pause));
+                else
+                    bt_pause.setText(getString(R.string.bt_play));
+            refreshView();
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            playerInterface = (PlayerInterface) service;
+            boundCallback();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    }
 
 }

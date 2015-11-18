@@ -17,15 +17,15 @@ public abstract class ProgressReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         switch (action) {
             case PlayerService.ACTION_UPDATE_POSITION:
-                onUpdatePosition();
+                onUpdatePosition(intent);
                 break;
             case PlayerService.ACTION_UPDATE_DURATION:
-                onUpdateDuration();
+                onUpdateDuration(intent);
                 break;
         }
     }
 
-    public abstract void onUpdatePosition();
+    public abstract void onUpdatePosition(Intent intent);
 
-    public abstract void onUpdateDuration();
+    public abstract void onUpdateDuration(Intent intent);
 }

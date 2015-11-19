@@ -5,10 +5,20 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
+import com.ruffneck.player.music.Comparator.MusicComparator;
+import com.ruffneck.player.music.Comparator.NameComparator;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MusicLoader {
+
+    public static final int MODE_LIST = 1;
+
+    public static final int MODE_SINGLE_LOOP = 2;
+
+    public static final int MODE_RANDOM = 3;
 
     private static Context mContext;
 
@@ -16,6 +26,7 @@ public class MusicLoader {
 
     private List<Music> musicList = new ArrayList<>();
 
+    private MusicComparator comparator = new NameComparator();
     /**
      * The instance.
      */
@@ -24,13 +35,14 @@ public class MusicLoader {
     /**
      * Gain the Single Instance.
      * @param context the context.
-     * @return
+     * @return the single instance of MusicLoader.
      */
     public static MusicLoader getInstance(Context context){
         if(instance == null){
             instance = new MusicLoader(context);
             mContext = context;
         }
+        String string;
         return instance;
     }
 
@@ -75,10 +87,20 @@ public class MusicLoader {
 
             cursor.close();
         }
+        Collections.sort(musicList,comparator);
     }
 
     public List<Music> getMusicList(){
         return musicList;
+    }
+
+    /**
+     * Resort the musicList by invoking this method.
+     * @param musicComparator A comparator implements this interface.
+     */
+    public void setComparator(MusicComparator musicComparator){
+        this.comparator = musicComparator;
+        Collections.sort(musicList,musicComparator);
     }
 
 }

@@ -119,16 +119,17 @@ public class PlayActivity extends AppCompatActivity {
         sbChangedListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                System.out.println("PlayActivity.onProgressChanged");
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                System.out.println("PlayActivity.onStartTrackingTouch");
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                System.out.println("PlayActivity.onStopTrackingTouch");
                 player.seekTo(seekBar.getProgress());
                 refreshView();
             }

@@ -140,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
         filter.addAction(PlayerService.ACTION_UPDATE_DURATION);
+        filter.addAction(PlayerService.ACTION_SKIP_SONG);
         registerReceiver(mainReceiver, filter);
 
         //refresh the UI including the button
@@ -240,6 +241,14 @@ public class MainActivity extends AppCompatActivity {
     class MainReceiver extends ProgressReceiver {
 
         @Override
+        public void onSkipSong(Intent intent) {
+            refreshView();
+            Music music = intent.getExtras().getParcelable("music");
+
+            setStateBarInfo(music);
+        }
+
+        @Override
         public void onUpdatePosition(Intent intent) {
             int position = mPref.getInt("position", 0);
             sb_process.setProgress(position);
@@ -252,6 +261,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Set the StateBar's information by the music received by the service.
+     * @param music
+     */
+    private void setStateBarInfo(Music music) {
+        if (music != null) {
+            tv_bottom_artist.setText(music.getArtist());
+            tv_bottom_song_name.setText(music.getTitle());
+        }
+    }
+
     private class MusicServiceConnection implements CallBackServiceConnection {
 
         @Override
@@ -260,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
                 if (playable.isPlaying())
                     bt_pause.setText(getString(R.string.bt_pause));
                 else
-                    bt_pause.setText( getString(R.string.bt_play));
+                    bt_pause.setText(getString(R.string.bt_play));
             refreshView();
         }
 

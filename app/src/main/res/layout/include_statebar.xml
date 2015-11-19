@@ -29,7 +29,8 @@
             android:src="@android:drawable/ic_menu_share" />
 
         <RelativeLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent">
 
             <SeekBar
@@ -62,7 +63,7 @@
             </LinearLayout>
 
 
-            <TextView
+            <com.ruffneck.player.view.FocusTextView
                 android:id="@+id/tv_bottom_song_name"
                 style="@style/SongNameStyle.Bottom"
                 android:layout_alignParentLeft="true"
@@ -71,7 +72,7 @@
                 android:layout_toLeftOf="@id/ll_bt"
                 android:layout_toStartOf="@id/ll_bt" />
 
-            <TextView
+            <com.ruffneck.player.view.FocusTextView
                 android:id="@+id/tv_bottom_artist"
                 style="@style/ArtistStyle.Bottom"
                 android:layout_alignParentBottom="true"

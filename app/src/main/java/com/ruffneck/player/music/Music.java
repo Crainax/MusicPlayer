@@ -1,6 +1,9 @@
 package com.ruffneck.player.music;
 
-public class Music {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Music implements Parcelable{
 
     private String displayName;
     private String album;
@@ -13,6 +16,29 @@ public class Music {
 
     public Music() {
     }
+
+    protected Music(Parcel in) {
+        displayName = in.readString();
+        album = in.readString();
+        id = in.readInt();
+        duration = in.readLong();
+        size = in.readLong();
+        artist = in.readString();
+        url = in.readString();
+        title = in.readString();
+    }
+
+    public static final Creator<Music> CREATOR = new Creator<Music>() {
+        @Override
+        public Music createFromParcel(Parcel in) {
+            return new Music(in);
+        }
+
+        @Override
+        public Music[] newArray(int size) {
+            return new Music[size];
+        }
+    };
 
     public String getDisplayName() {
         return displayName;
@@ -106,5 +132,22 @@ public class Music {
     @Override
     public int hashCode() {
         return id;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(displayName);
+        dest.writeString(album);
+        dest.writeInt(id);
+        dest.writeLong(duration);
+        dest.writeLong(size);
+        dest.writeString(artist);
+        dest.writeString(url);
+        dest.writeString(title);
     }
 }

@@ -29,16 +29,12 @@
     <style name="SongNameStyle.Bottom">
         <item name="android:textSize">15sp</item>
         <item name="android:ellipsize">marquee</item>
-        <item name="android:focusable">true</item>
-        <item name="android:focusableInTouchMode">true</item>
         <item name="android:marqueeRepeatLimit">marquee_forever</item>
     </style>
 
     <style name="ArtistStyle.Bottom">
         <item name="android:textSize">10sp</item>
         <item name="android:ellipsize">marquee</item>
-        <item name="android:focusable">true</item>
-        <item name="android:focusableInTouchMode">true</item>
         <item name="android:marqueeRepeatLimit">marquee_forever</item>
     </style>
 </resources>

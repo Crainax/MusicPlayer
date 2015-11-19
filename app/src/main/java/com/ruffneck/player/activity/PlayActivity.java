@@ -154,6 +154,7 @@ public class PlayActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
         filter.addAction(PlayerService.ACTION_UPDATE_DURATION);
+        filter.addAction(PlayerService.ACTION_SKIP_SONG);
         registerReceiver(progressReceiver, filter);
     }
 
@@ -236,6 +237,11 @@ public class PlayActivity extends AppCompatActivity {
      * The Receiver is used to update the current progress.
      */
     private class PlayReceiver extends ProgressReceiver {
+
+        @Override
+        public void onSkipSong(Intent intent) {
+            refreshView();
+        }
 
         @Override
         public void onUpdatePosition(Intent intent) {

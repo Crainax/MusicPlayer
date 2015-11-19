@@ -7,6 +7,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
@@ -216,9 +217,15 @@ public class PlayerService extends Service implements Playable, Skipable {
     public void Skip(Music music) {
         PlayerService.this.music = music;
         mediaPlayer.reset();
-        play();/*
+        play();
+
+        //Notify activity that need to update the music's information.
+        mPref.edit().putInt("position", 0).apply();
         Intent intent = new Intent(ACTION_SKIP_SONG);
-        Bundle bundle = new Bundle();*/
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("music",music);
+        intent.putExtras(bundle);
+        sendBroadcast(intent);
     }
 
     @Override

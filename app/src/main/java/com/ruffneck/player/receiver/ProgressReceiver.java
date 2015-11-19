@@ -22,8 +22,12 @@ public abstract class ProgressReceiver extends BroadcastReceiver {
             case PlayerService.ACTION_UPDATE_DURATION:
                 onUpdateDuration(intent);
                 break;
+            case PlayerService.ACTION_SKIP_SONG:
+                onSkipSong(intent);
         }
     }
+
+    public abstract void onSkipSong(Intent intent);
 
     public abstract void onUpdatePosition(Intent intent);
 

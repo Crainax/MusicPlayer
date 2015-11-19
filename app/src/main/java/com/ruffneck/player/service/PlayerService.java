@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
+import com.ruffneck.player.music.Music;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
@@ -28,6 +30,7 @@ public class PlayerService extends Service implements PlayerInterface {
     public static final String ACTION_UPDATE_POSITION = "com.ruffneck.player.UPDATE_POSITION";
     public static final String ACTION_UPDATE_DURATION = "com.ruffneck.player.UPDATE_DURATION";
 
+    private Music music = null;
 
     //The mediaPlayer's state is stop , need to be start;
 //    public static final int STATE_STOP = 1;
@@ -109,7 +112,7 @@ public class PlayerService extends Service implements PlayerInterface {
         addTimer();
         isInit = true;
 //        mPref.edit().putInt("state", STATE_PLAYING).apply();
-        Uri myUri = Uri.fromFile(new File("sdcard/1.mp3"));
+        Uri myUri = Uri.fromFile(new File("/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3"));
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(getApplicationContext(), myUri);

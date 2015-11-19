@@ -16,6 +16,17 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
 
     List<Music> musics;
 
+    OnItemClickListener mOnItemClickListener;
+
+    public interface OnItemClickListener{
+        void onClickListener(View v,int position);
+        void onLongClickListener(View v,int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener mOnItemClickListener){
+        this.mOnItemClickListener = mOnItemClickListener;
+    }
+
     public MusicListAdapter(List<Music> musics) {
         this.musics = musics;
     }
@@ -33,6 +44,34 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
         holder.tv_artist.setText(musics.get(position).getArtist());
         holder.tv_duration.setText(FormatUtils.formatTime(musics.get(position).getDuration()));
         holder.tv_songName.setText(musics.get(position).getTitle());
+
+        setOnItemClickEvent(holder,position);
+    }
+
+
+    /**
+     * set the view's on click event by the inner interface.
+     * @param holder the viewHolder need to be set event listener.
+     * @param position the view's position.
+     */
+    private void setOnItemClickEvent(final MusicViewHolder holder, final int position) {
+
+        if(mOnItemClickListener != null){
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mOnItemClickListener.onClickListener(holder.itemView,position);
+                }
+            });
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    mOnItemClickListener.onLongClickListener(holder.itemView,position);
+                    return true;
+                }
+            });
+        }
+
     }
 
     @Override

@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
@@ -195,6 +196,18 @@ public class MainActivity extends AppCompatActivity {
 
         MusicListAdapter musicAdapter = new MusicListAdapter(musicList);
         rv_list.setAdapter(musicAdapter);
+
+        musicAdapter.setOnItemClickListener(new MusicListAdapter.OnItemClickListener() {
+            @Override
+            public void onClickListener(View v, int position) {
+                Toast.makeText(MainActivity.this, "click" + position, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onLongClickListener(View v, int position) {
+                Toast.makeText(MainActivity.this, "longClick" + position, Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 

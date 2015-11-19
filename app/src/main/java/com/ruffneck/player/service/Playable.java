@@ -1,6 +1,6 @@
 package com.ruffneck.player.service;
 
-public interface PlayerInterface {
+public interface Playable {
     void play();
     void pause();
     void continuePlay();

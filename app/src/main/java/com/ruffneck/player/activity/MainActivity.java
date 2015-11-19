@@ -25,8 +25,9 @@ import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
 import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
-import com.ruffneck.player.service.PlayerInterface;
+import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
+import com.ruffneck.player.service.Skipable;
 import com.ruffneck.player.utils.RuntimeUtils;
 
 import java.util.List;
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private MainReceiver mainReceiver = new MainReceiver();
     private SeekBar sb_process;
     private SharedPreferences mPref;
-    private PlayerInterface playerInterface;
+    private Playable playable;
     private MusicServiceConnection conn;
     private TextView tv_bottom_song_name;
     private TextView tv_bottom_artist;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     private View.OnClickListener playOnClickListener;
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
+    private Skipable skipable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,16 +85,16 @@ public class MainActivity extends AppCompatActivity {
                 String pause = getString(R.string.bt_pause);
                 String play = getString(R.string.bt_play);
                 //if the service isn't running , and you need to start and play.
-                if (!playerInterface.isInit()) {
-                    playerInterface.play();
+                if (!playable.isInit()) {
+                    playable.play();
                     bt_pause.setText(pause);
-                } else if (playerInterface.isPlaying()) {
+                } else if (playable.isPlaying()) {
                     //If you need to pause.
-                    playerInterface.pause();
+                    playable.pause();
                     bt_pause.setText(play);
                 } else {
                     //this brunch meaning you need to continue to play the music that you pause previously.
-                    playerInterface.continuePlay();
+                    playable.continuePlay();
                     bt_pause.setText(pause);
                 }
 
@@ -114,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                playerInterface.seekTo(seekBar.getProgress());
+                playable.seekTo(seekBar.getProgress());
                 refreshView();
             }
         };
@@ -141,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(mainReceiver, filter);
 
         //refresh the UI including the button
-        if (playerInterface != null)
+        if (playable != null)
             conn.boundCallback();
     }
 
@@ -200,7 +202,8 @@ public class MainActivity extends AppCompatActivity {
         musicAdapter.setOnItemClickListener(new MusicListAdapter.OnItemClickListener() {
             @Override
             public void onClickListener(View v, int position) {
-                Toast.makeText(MainActivity.this, "click" + position, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MainActivity.this, "click" + position, Toast.LENGTH_SHORT).show();
+                skipable.Skip(MusicLoader.getInstance(MainActivity.this).getMusicList().get(position));
             }
 
             @Override
@@ -254,16 +257,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void boundCallback() {
             if (RuntimeUtils.isServiceRunning(MainActivity.this, PlayerService.class))
-                if (playerInterface.isPlaying())
+                if (playable.isPlaying())
                     bt_pause.setText(getString(R.string.bt_pause));
                 else
-                    bt_pause.setText(getString(R.string.bt_play));
+                    bt_pause.setText( getString(R.string.bt_play));
             refreshView();
         }
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            playerInterface = (PlayerInterface) service;
+            playable = (Playable) service;
+            skipable = (Skipable) service;
             boundCallback();
         }
 

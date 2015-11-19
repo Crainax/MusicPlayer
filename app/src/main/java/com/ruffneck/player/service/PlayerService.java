@@ -18,17 +18,18 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class PlayerService extends Service implements PlayerInterface {
+public class PlayerService extends Service implements Playable, Skipable {
 
     /**
      * How long does the service send a broadcast.
      */
     public static final int DELAY_SEND = 1000;
-    MediaPlayer mediaPlayer;
+    private MediaPlayer mediaPlayer;
     private SharedPreferences mPref;
 
     public static final String ACTION_UPDATE_POSITION = "com.ruffneck.player.UPDATE_POSITION";
     public static final String ACTION_UPDATE_DURATION = "com.ruffneck.player.UPDATE_DURATION";
+    public static final String ACTION_SKIP_SONG = "com.ruffneck.player.SKIP_SONG";
 
     private Music music = null;
 
@@ -52,7 +53,8 @@ public class PlayerService extends Service implements PlayerInterface {
         return new MusicBinder();
     }
 
-    class MusicBinder extends Binder implements PlayerInterface {
+
+    class MusicBinder extends Binder implements Playable, Skipable {
 
         @Override
         public void play() {
@@ -94,6 +96,20 @@ public class PlayerService extends Service implements PlayerInterface {
         }
 
 
+        @Override
+        public void Skip(Music music) {
+            PlayerService.this.Skip(music);
+        }
+
+        @Override
+        public void next() {
+            PlayerService.this.next();
+        }
+
+        @Override
+        public void previous() {
+            PlayerService.this.previous();
+        }
     }
 
     @Override
@@ -111,8 +127,10 @@ public class PlayerService extends Service implements PlayerInterface {
     public void play() {
         addTimer();
         isInit = true;
-//        mPref.edit().putInt("state", STATE_PLAYING).apply();
-        Uri myUri = Uri.fromFile(new File("/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3"));
+        //"/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3"
+        String playUrl = "/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3";
+        if (music != null) playUrl = music.getUrl();
+        Uri myUri = Uri.fromFile(new File(playUrl));
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(getApplicationContext(), myUri);
@@ -143,7 +161,7 @@ public class PlayerService extends Service implements PlayerInterface {
     @Override
     public void seekTo(int process) {
         mediaPlayer.seekTo(process);
-        mPref.edit().putInt("position",process).apply();
+        mPref.edit().putInt("position", process).apply();
     }
 
     @Override
@@ -169,14 +187,17 @@ public class PlayerService extends Service implements PlayerInterface {
     }
 
     public void addTimer() {
+        if (timer != null)
+            timer.cancel();
+
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 int position = mPref.getInt("position", 0);
-                int CurrentPosition =mediaPlayer.getCurrentPosition();
+                int CurrentPosition = mediaPlayer.getCurrentPosition();
                 if (position != CurrentPosition) {
-                    mPref.edit().putInt("position",CurrentPosition).apply();
+                    mPref.edit().putInt("position", CurrentPosition).apply();
                     Intent intent = new Intent(ACTION_UPDATE_POSITION);
 //                    Bundle bundle = new Bundle();
 //                    bundle.putInt("duration", mediaPlayer.getDuration());
@@ -191,4 +212,22 @@ public class PlayerService extends Service implements PlayerInterface {
     }
 
 
+    @Override
+    public void Skip(Music music) {
+        PlayerService.this.music = music;
+        mediaPlayer.reset();
+        play();/*
+        Intent intent = new Intent(ACTION_SKIP_SONG);
+        Bundle bundle = new Bundle();*/
+    }
+
+    @Override
+    public void next() {
+
+    }
+
+    @Override
+    public void previous() {
+
+    }
 }

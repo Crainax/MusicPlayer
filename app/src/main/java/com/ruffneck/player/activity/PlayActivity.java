@@ -15,7 +15,7 @@ import android.widget.TextView;
 import com.ruffneck.player.R;
 import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
-import com.ruffneck.player.service.PlayerInterface;
+import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
@@ -31,7 +31,7 @@ public class PlayActivity extends AppCompatActivity {
     private SeekBar sb_process;
 
     private MusicServiceConnection conn;
-    private PlayerInterface player;
+    private Playable player;
     private SharedPreferences mPref;
 
     private PlayReceiver progressReceiver = new PlayReceiver();
@@ -170,7 +170,7 @@ public class PlayActivity extends AppCompatActivity {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            player = (PlayerInterface) service;
+            player = (Playable) service;
             boundCallback();
         }
 

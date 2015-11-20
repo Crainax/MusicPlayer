@@ -39,7 +39,7 @@ public class MusicArrayQueue extends MusicQueue {
         try {
             music = musicList.get(index - 1);
         } catch (IndexOutOfBoundsException e) {
-            throw new NoMorePreviousSongException("No more next song!");
+            throw new NoMorePreviousSongException("No more previous song!");
         }
 
 

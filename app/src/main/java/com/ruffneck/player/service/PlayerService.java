@@ -35,6 +35,14 @@ public class PlayerService extends Service implements Playable, Skipable {
     public static final String ACTION_UPDATE_POSITION = "com.ruffneck.player.UPDATE_POSITION";
     public static final String ACTION_UPDATE_DURATION = "com.ruffneck.player.UPDATE_DURATION";
     public static final String ACTION_SKIP_SONG = "com.ruffneck.player.SKIP_SONG";
+    public static final String ACTION_PLAY = "com.ruffneck.player.PLAY";
+    public static final String ACTION_PAUSE = "com.ruffneck.player.PAUSE";
+    public static final String ACTION_CONTINUE_PLAY = "com.ruffneck.player.CONTINUE_PLAY";
+
+    //This field is used to add to the receiver's intent filter.
+    public static final String[] actionList = new String[]{
+            ACTION_SKIP_SONG, ACTION_UPDATE_DURATION, ACTION_UPDATE_POSITION,
+            ACTION_PLAY,ACTION_PAUSE,ACTION_CONTINUE_PLAY};
 
     private Music music = null;
 
@@ -101,6 +109,11 @@ public class PlayerService extends Service implements Playable, Skipable {
             return PlayerService.this.isInit();
         }
 
+        @Override
+        public Music getMusic() {
+            return music;
+        }
+
 
         @Override
         public void Skip(Music music) {
@@ -108,12 +121,12 @@ public class PlayerService extends Service implements Playable, Skipable {
         }
 
         @Override
-        public void next() {
+        public void next() throws NoMoreNextSongException {
             PlayerService.this.next();
         }
 
         @Override
-        public void previous() {
+        public void previous() throws NoMorePreviousSongException {
             PlayerService.this.previous();
         }
     }
@@ -137,6 +150,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         String playUrl = "/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3";
         if (music != null) playUrl = music.getUrl();
         Uri myUri = Uri.fromFile(new File(playUrl));
+
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(getApplicationContext(), myUri);
@@ -149,12 +163,15 @@ public class PlayerService extends Service implements Playable, Skipable {
         //Notify all the receiver that the duration has changed!
         mPref.edit().putInt("duration", mediaPlayer.getDuration()).apply();
         sendBroadcast(new Intent(ACTION_UPDATE_DURATION));
+
+        sendBroadcast(new Intent(ACTION_PLAY));
     }
 
     @Override
     public void pause() {
         mediaPlayer.pause();
 //        mPref.edit().putInt("state", STATE_PAUSE).apply();
+        sendBroadcast(new Intent(ACTION_PAUSE));
     }
 
 
@@ -162,6 +179,7 @@ public class PlayerService extends Service implements Playable, Skipable {
     public void continuePlay() {
         mediaPlayer.start();
 //        mPref.edit().putInt("state", STATE_PLAYING).apply();
+        sendBroadcast(new Intent(ACTION_CONTINUE_PLAY));
     }
 
     @Override
@@ -178,6 +196,11 @@ public class PlayerService extends Service implements Playable, Skipable {
     @Override
     public boolean isInit() {
         return isInit;
+    }
+
+    @Override
+    public Music getMusic() {
+        return music;
     }
 
     @Override
@@ -228,26 +251,18 @@ public class PlayerService extends Service implements Playable, Skipable {
         mPref.edit().putInt("position", 0).apply();
         Intent intent = new Intent(ACTION_SKIP_SONG);
         Bundle bundle = new Bundle();
-        bundle.putParcelable("music",music);
+        bundle.putParcelable("music", music);
         intent.putExtras(bundle);
         sendBroadcast(intent);
     }
 
     @Override
-    public void next() {
-        try {
+    public void next() throws NoMoreNextSongException {
             Skip(musicQueue.next(music));
-        } catch (NoMoreNextSongException e) {
-            Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
-    public void previous() {
-        try {
+    public void previous() throws NoMorePreviousSongException {
             Skip(musicQueue.previous(music));
-        } catch (NoMorePreviousSongException e) {
-            Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
 }

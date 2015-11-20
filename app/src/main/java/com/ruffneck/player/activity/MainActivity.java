@@ -6,6 +6,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
 import com.ruffneck.player.activity.recyclerview.MusicListAdapter;
+import com.ruffneck.player.exception.NoMoreNextSongException;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
 import com.ruffneck.player.receiver.ProgressReceiver;
@@ -29,6 +31,7 @@ import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.service.Skipable;
 import com.ruffneck.player.utils.RuntimeUtils;
+import com.ruffneck.player.utils.SnackBarUtils;
 
 import java.util.List;
 
@@ -50,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private Button bt_next;
 
     private View.OnClickListener playOnClickListener;
+    private View.OnClickListener nextOnClickListener;
+
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
     private Skipable skipable;
 
@@ -59,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mPref = getSharedPreferences("config", MODE_PRIVATE);
+
 
         //Start and bind the PlayService to get the Accessibility to use the service's methods.
         startAndBindService();
@@ -72,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
         initToolbar();
 
         initRecyclerView();
+
     }
 
     /**
@@ -82,23 +89,32 @@ public class MainActivity extends AppCompatActivity {
         playOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String pause = getString(R.string.bt_pause);
-                String play = getString(R.string.bt_play);
                 //if the service isn't running , and you need to start and play.
                 if (!playable.isInit()) {
                     playable.play();
-                    bt_pause.setText(pause);
                 } else if (playable.isPlaying()) {
                     //If you need to pause.
                     playable.pause();
-                    bt_pause.setText(play);
                 } else {
                     //this brunch meaning you need to continue to play the music that you pause previously.
                     playable.continuePlay();
-                    bt_pause.setText(pause);
                 }
 
 
+            }
+        };
+
+
+        //Control the state of the current music.
+        nextOnClickListener = new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                try {
+                    skipable.next();
+                } catch (NoMoreNextSongException e) {
+                    SnackBarUtils.showExceptionSnackBar(rv_list,e,Snackbar.LENGTH_SHORT);
+                }
             }
         };
 
@@ -111,13 +127,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 playable.seekTo(seekBar.getProgress());
-                refreshView();
+                refreshProgress();
             }
         };
     }
@@ -138,14 +153,18 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
-        filter.addAction(PlayerService.ACTION_UPDATE_DURATION);
-        filter.addAction(PlayerService.ACTION_SKIP_SONG);
+        String[] actionList = PlayerService.actionList;
+
+        for (String action : actionList) {
+            filter.addAction(action);
+        }
+
         registerReceiver(mainReceiver, filter);
 
         //refresh the UI including the button
-        if (playable != null)
+        if (playable != null) {
             conn.boundCallback();
+        }
     }
 
     @Override
@@ -178,7 +197,8 @@ public class MainActivity extends AppCompatActivity {
         tv_bottom_song_name = (TextView) stateBar.findViewById(R.id.tv_bottom_song_name);
         tv_bottom_artist = (TextView) stateBar.findViewById(R.id.tv_bottom_artist);
         bt_pause = (Button) stateBar.findViewById(R.id.bt_bottom_pause);
-        bt_next = (Button) stateBar.findViewById(R.id.bt_next);
+        bt_next = (Button) stateBar.findViewById(R.id.bt_bottom_next);
+        bt_next.setOnClickListener(nextOnClickListener);
         bt_pause.setOnClickListener(playOnClickListener);
         sb_process.setOnSeekBarChangeListener(sbChangedListener);
     }
@@ -231,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void refreshView() {
+    private void refreshProgress() {
         int position = mPref.getInt("position", 0);
         int duration = mPref.getInt("duration", 0);
         sb_process.setMax(duration);
@@ -241,11 +261,32 @@ public class MainActivity extends AppCompatActivity {
     class MainReceiver extends ProgressReceiver {
 
         @Override
+        public void onContinuePlay(Intent intent) {
+
+            String pause = getString(R.string.bt_pause);
+            bt_pause.setText(pause);
+
+        }
+
+        @Override
+        public void onPause(Intent intent) {
+            String play = getString(R.string.bt_play);
+            bt_pause.setText(play);
+        }
+
+        @Override
+        public void onPlay(Intent intent) {
+
+            String pause = getString(R.string.bt_pause);
+            bt_pause.setText(pause);
+        }
+
+        @Override
         public void onSkipSong(Intent intent) {
-            refreshView();
+            refreshProgress();
             Music music = intent.getExtras().getParcelable("music");
 
-            setStateBarInfo(music);
+            refreshMusicInfo(music);
         }
 
         @Override
@@ -263,9 +304,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Set the StateBar's information by the music received by the service.
+     *
      * @param music
      */
-    private void setStateBarInfo(Music music) {
+    private void refreshMusicInfo(Music music) {
         if (music != null) {
             tv_bottom_artist.setText(music.getArtist());
             tv_bottom_song_name.setText(music.getTitle());
@@ -281,7 +323,8 @@ public class MainActivity extends AppCompatActivity {
                     bt_pause.setText(getString(R.string.bt_pause));
                 else
                     bt_pause.setText(getString(R.string.bt_play));
-            refreshView();
+            refreshProgress();
+            refreshMusicInfo(playable.getMusic());
         }
 
         @Override

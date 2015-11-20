@@ -6,6 +6,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -13,6 +14,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ruffneck.player.R;
+import com.ruffneck.player.exception.NoMoreNextSongException;
+import com.ruffneck.player.exception.NoMorePreviousSongException;
 import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;
@@ -20,6 +23,7 @@ import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.service.Skipable;
 import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
+import com.ruffneck.player.utils.SnackBarUtils;
 
 
 public class PlayActivity extends AppCompatActivity {
@@ -43,6 +47,7 @@ public class PlayActivity extends AppCompatActivity {
     private View.OnClickListener PreviousOnclickListener;
 
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
+    private View parentView;
     //    private static PlayActivity pa;
 
 /*    public static class PlayHandler extends Handler {
@@ -126,13 +131,21 @@ public class PlayActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                skipable.next();
+                try {
+                    skipable.next();
+                } catch (NoMoreNextSongException e) {
+                    SnackBarUtils.showExceptionSnackBar(parentView, e, Snackbar.LENGTH_SHORT);
+                }
             }
         };
         PreviousOnclickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                skipable.previous();
+                try {
+                    skipable.previous();
+                } catch (NoMorePreviousSongException e) {
+                    SnackBarUtils.showExceptionSnackBar(parentView, e, Snackbar.LENGTH_SHORT);
+                }
             }
         };
 
@@ -152,7 +165,7 @@ public class PlayActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 System.out.println("PlayActivity.onStopTrackingTouch");
                 playable.seekTo(seekBar.getProgress());
-                refreshView();
+                refreshProgress();
             }
         };
 
@@ -174,9 +187,12 @@ public class PlayActivity extends AppCompatActivity {
         super.onResume();
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(PlayerService.ACTION_UPDATE_POSITION);
-        filter.addAction(PlayerService.ACTION_UPDATE_DURATION);
-        filter.addAction(PlayerService.ACTION_SKIP_SONG);
+        String[] actionList = PlayerService.actionList;
+
+        for (String action : actionList) {
+            filter.addAction(action);
+        }
+
         registerReceiver(progressReceiver, filter);
     }
 
@@ -210,12 +226,15 @@ public class PlayActivity extends AppCompatActivity {
                     bt_pause.setText(getString(R.string.bt_pause));
                 else
                     bt_pause.setText(getString(R.string.bt_play));
-            refreshView();
+            refreshProgress();
         }
     }
 
 
     private void initView() {
+
+        parentView = findViewById(R.id.parent_play);
+
         bt_pause = (Button) findViewById(R.id.bt_pause);
         bt_pause.setOnClickListener(playOnClickListener);
 
@@ -231,7 +250,7 @@ public class PlayActivity extends AppCompatActivity {
 
         tv_process = (TextView) findViewById(R.id.tv_process);
 
-        refreshView();
+        refreshProgress();
     }
 
     /**
@@ -240,7 +259,7 @@ public class PlayActivity extends AppCompatActivity {
      * <strong>when you find that the UI doesn't fresh because the Receiver receiving the intent
      * during it's interval,you can invoke this method.</strong>
      */
-    private void refreshView() {
+    private void refreshProgress() {
         //refresh the seekBar and the textView for the time rely on the sharedPreference.
         int position = mPref.getInt("position", 0);
         int duration = mPref.getInt("duration", 0);
@@ -264,8 +283,29 @@ public class PlayActivity extends AppCompatActivity {
     private class PlayReceiver extends ProgressReceiver {
 
         @Override
+        public void onContinuePlay(Intent intent) {
+
+            String pause = getString(R.string.bt_pause);
+            bt_pause.setText(pause);
+
+        }
+
+        @Override
+        public void onPause(Intent intent) {
+            String play = getString(R.string.bt_play);
+            bt_pause.setText(play);
+        }
+
+        @Override
+        public void onPlay(Intent intent) {
+
+            String pause = getString(R.string.bt_pause);
+            bt_pause.setText(pause);
+        }
+
+        @Override
         public void onSkipSong(Intent intent) {
-            refreshView();
+            refreshProgress();
         }
 
         @Override

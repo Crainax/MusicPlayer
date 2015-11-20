@@ -24,8 +24,24 @@ public abstract class ProgressReceiver extends BroadcastReceiver {
                 break;
             case PlayerService.ACTION_SKIP_SONG:
                 onSkipSong(intent);
+                break;
+            case PlayerService.ACTION_PLAY:
+                onPlay(intent);
+                break;
+            case PlayerService.ACTION_PAUSE:
+                onPause(intent);
+                break;
+            case PlayerService.ACTION_CONTINUE_PLAY:
+                onContinuePlay(intent);
+                break;
         }
     }
+
+    public abstract void onContinuePlay(Intent intent);
+
+    public abstract void onPause(Intent intent);
+
+    public abstract void onPlay(Intent intent);
 
     public abstract void onSkipSong(Intent intent);
 

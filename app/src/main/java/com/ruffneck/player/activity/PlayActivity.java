@@ -17,6 +17,7 @@ import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
+import com.ruffneck.player.service.Skipable;
 import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
 
@@ -31,11 +32,16 @@ public class PlayActivity extends AppCompatActivity {
     private SeekBar sb_process;
 
     private MusicServiceConnection conn;
-    private Playable player;
+    private Playable playable;
+    private Skipable skipable;
     private SharedPreferences mPref;
 
     private PlayReceiver progressReceiver = new PlayReceiver();
+
     private View.OnClickListener playOnClickListener;
+    private View.OnClickListener nextOnClickListener;
+    private View.OnClickListener PreviousOnclickListener;
+
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
     //    private static PlayActivity pa;
 
@@ -98,20 +104,35 @@ public class PlayActivity extends AppCompatActivity {
                 String pause = getString(R.string.bt_pause);
                 String play = getString(R.string.bt_play);
                 //if the service isn't running , and you need to start and play.
-                if (!player.isInit()) {
-                    player.play();
+                if (!playable.isInit()) {
+                    playable.play();
                     bt_pause.setText(pause);
-                } else if (player.isPlaying()) {
+                } else if (playable.isPlaying()) {
                     //If you need to pause.
-                    player.pause();
+                    playable.pause();
                     bt_pause.setText(play);
                 } else {
                     //this brunch meaning you need to continue to play the music that you pause previously.
-                    player.continuePlay();
+                    playable.continuePlay();
                     bt_pause.setText(pause);
                 }
 
 
+            }
+        };
+
+        //Control the state of the current music.
+        nextOnClickListener = new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                skipable.next();
+            }
+        };
+        PreviousOnclickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                skipable.previous();
             }
         };
 
@@ -130,7 +151,7 @@ public class PlayActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 System.out.println("PlayActivity.onStopTrackingTouch");
-                player.seekTo(seekBar.getProgress());
+                playable.seekTo(seekBar.getProgress());
                 refreshView();
             }
         };
@@ -172,7 +193,8 @@ public class PlayActivity extends AppCompatActivity {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            player = (Playable) service;
+            playable = (Playable) service;
+            skipable = (Skipable) service;
             boundCallback();
         }
 
@@ -182,9 +204,9 @@ public class PlayActivity extends AppCompatActivity {
 
         @Override
         public void boundCallback() {
-            //refresh the button's text rely on the media player's state.
+            //refresh the button's text rely on the media playable's state.
             if (RuntimeUtils.isServiceRunning(PlayActivity.this, PlayerService.class))
-                if (player.isPlaying())
+                if (playable.isPlaying())
                     bt_pause.setText(getString(R.string.bt_pause));
                 else
                     bt_pause.setText(getString(R.string.bt_play));
@@ -199,8 +221,10 @@ public class PlayActivity extends AppCompatActivity {
 
 
         bt_next = (Button) findViewById(R.id.bt_next);
+        bt_next.setOnClickListener(nextOnClickListener);
+        bt_previous = (Button) findViewById(R.id.bt_previous);
+        bt_previous.setOnClickListener(PreviousOnclickListener);
 
-        bt_previous = (Button) findViewById(R.id.bt_next);
 
         sb_process = (SeekBar) findViewById(R.id.sb_process);
         sb_process.setOnSeekBarChangeListener(sbChangedListener);

@@ -12,7 +12,11 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
+import com.ruffneck.player.exception.NoMoreNextSongException;
+import com.ruffneck.player.exception.NoMorePreviousSongException;
 import com.ruffneck.player.music.Music;
+import com.ruffneck.player.music.queue.MusicArrayQueue;
+import com.ruffneck.player.music.queue.MusicQueue;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +38,7 @@ public class PlayerService extends Service implements Playable, Skipable {
 
     private Music music = null;
 
+    private MusicQueue musicQueue = new MusicArrayQueue(this);
     //The mediaPlayer's state is stop , need to be start;
 //    public static final int STATE_STOP = 1;
 
@@ -230,11 +235,19 @@ public class PlayerService extends Service implements Playable, Skipable {
 
     @Override
     public void next() {
-
+        try {
+            Skip(musicQueue.next(music));
+        } catch (NoMoreNextSongException e) {
+            Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void previous() {
-
+        try {
+            Skip(musicQueue.previous(music));
+        } catch (NoMorePreviousSongException e) {
+            Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }

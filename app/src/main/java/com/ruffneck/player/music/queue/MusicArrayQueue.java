@@ -14,7 +14,12 @@ public class MusicArrayQueue extends MusicQueue {
 
     @Override
     public Music next(Music currentMusic) throws NoMoreNextSongException {
-        int index = musicList.indexOf(currentMusic);
+        int index;
+        if (currentMusic == null)
+            index = -1;
+        else
+            index = musicList.indexOf(currentMusic);
+
         Music music = null;
 //        if(index == -1){
 //            System.out.println("index =-1!");
@@ -31,7 +36,12 @@ public class MusicArrayQueue extends MusicQueue {
     @Override
     public Music previous(Music currentMusic) throws NoMorePreviousSongException {
 
-        int index = musicList.indexOf(currentMusic);
+        int index;
+        if (currentMusic == null)
+            index = -1;
+        else
+            index = musicList.indexOf(currentMusic);
+
         Music music = null;
 //        if(index == -1){
 //            System.out.println("index =-1!");

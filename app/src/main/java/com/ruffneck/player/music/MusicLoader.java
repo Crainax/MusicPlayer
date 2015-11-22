@@ -103,4 +103,13 @@ public class MusicLoader {
         Collections.sort(musicList,musicComparator);
     }
 
+    public Music findMusicById(int id){
+        for (Music music : musicList) {
+            if(music.getId() == id){
+                return music;
+            }
+        }
+        return null;
+    }
+
 }

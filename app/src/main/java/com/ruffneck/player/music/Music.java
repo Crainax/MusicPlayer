@@ -28,6 +28,7 @@ public class Music implements Parcelable{
         title = in.readString();
     }
 
+
     public static final Creator<Music> CREATOR = new Creator<Music>() {
         @Override
         public Music createFromParcel(Parcel in) {

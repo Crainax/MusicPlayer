@@ -1,7 +1,13 @@
 package com.ruffneck.player.service;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -10,11 +16,16 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.ruffneck.player.R;
+import com.ruffneck.player.activity.MainActivity;
 import com.ruffneck.player.exception.NoMoreNextSongException;
 import com.ruffneck.player.exception.NoMorePreviousSongException;
 import com.ruffneck.player.music.Music;
+import com.ruffneck.player.music.MusicLoader;
 import com.ruffneck.player.music.queue.MusicArrayQueue;
 import com.ruffneck.player.music.queue.MusicQueue;
 
@@ -29,6 +40,7 @@ public class PlayerService extends Service implements Playable, Skipable {
      * How long does the service send a broadcast.
      */
     public static final int DELAY_SEND = 1000;
+    private static final int NOTIFICATION_ID = 0x123;
     private MediaPlayer mediaPlayer;
     private SharedPreferences mPref;
 
@@ -39,12 +51,20 @@ public class PlayerService extends Service implements Playable, Skipable {
     public static final String ACTION_PAUSE = "com.ruffneck.player.PAUSE";
     public static final String ACTION_CONTINUE_PLAY = "com.ruffneck.player.CONTINUE_PLAY";
 
-    //This field is used to add to the receiver's intent filter.
+    // The Bottom action including the continue play action.
+    public static final String ACTION_NOTIFY_PLAY = "com.ruffneck.player.NOTIFY_PLAY";
+    public static final String ACTION_NOTIFY_CLOSE = "com.ruffneck.player.NOTIFY_CLOSE";
+    public static final String ACTION_NOTIFY_NEXT = "com.ruffneck.player.ACTION_NOTIFY_NEXT";
+    public static final String ACTION_NOTIFY_PREVIOUS = "com.ruffneck.player.ACTION_NOTIFY_PREVIOUS";
+    public static final String ACTION_NOTIFY_PAUSE = "com.ruffneck.player.ACTION_NOTIFY_PAUSE";
+
+    //This field is used to add to the receiver's intent filter.(In the Activities)
     public static final String[] actionList = new String[]{
             ACTION_SKIP_SONG, ACTION_UPDATE_DURATION, ACTION_UPDATE_POSITION,
-            ACTION_PLAY,ACTION_PAUSE,ACTION_CONTINUE_PLAY};
+            ACTION_PLAY, ACTION_PAUSE, ACTION_CONTINUE_PLAY};
 
     private Music music = null;
+    private MusicLoader musicLoader = MusicLoader.getInstance(this);
 
     private MusicQueue musicQueue = new MusicArrayQueue(this);
     //The mediaPlayer's state is stop , need to be start;
@@ -58,13 +78,17 @@ public class PlayerService extends Service implements Playable, Skipable {
     private Timer timer;
 
     private boolean isInit = false;
+    private NotificationManager notificationManager;
+    private NotifyReceiver notifyReceiver;
+
+    private MusicBinder mBinder = new MusicBinder();
 
 //    private static int state = STATE_STOP;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return new MusicBinder();
+        return mBinder;
     }
 
 
@@ -137,6 +161,96 @@ public class PlayerService extends Service implements Playable, Skipable {
 
         mediaPlayer = new MediaPlayer();
         mPref = getSharedPreferences("config", MODE_PRIVATE);
+
+        initMusic();
+
+        initNotification();
+
+    }
+
+    private void initMusic() {
+
+        int musicId = mPref.getInt("music", -1);
+        if (musicId != -1) {
+            music = musicLoader.findMusicById(musicId);
+        } else {
+            try {
+                music = musicQueue.next(null);
+            } catch (NoMoreNextSongException ignored) {
+
+            }
+        }
+
+    }
+
+
+    /**
+     * Initialize the Notification to control the play state.
+     */
+    private void initNotification() {
+
+        //Start the Receiver that receive the notification's action.
+        notifyReceiver = new NotifyReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_NOTIFY_CLOSE);
+        filter.addAction(ACTION_NOTIFY_NEXT);
+        filter.addAction(ACTION_NOTIFY_PAUSE);
+        filter.addAction(ACTION_NOTIFY_PLAY);
+        filter.addAction(ACTION_NOTIFY_PREVIOUS);
+
+        registerReceiver(notifyReceiver, filter);
+
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        NotificationCompat.Builder builder
+                = new NotificationCompat.Builder(this);
+        NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle(builder);
+
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        //Set the notification's View by the current music state.
+        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.layout_notification);
+        remoteViews.setTextViewText(R.id.tv_notify_artist, music.getArtist());
+        remoteViews.setTextViewText(R.id.tv_notify_song_name, music.getTitle());
+        if (isPlaying()){
+            remoteViews.setImageViewResource(R.id.bt_notify_play, R.drawable.ic_pause_white_24dp);
+
+        }
+        else
+            remoteViews.setImageViewResource(R.id.bt_notify_play, R.drawable.ic_play_arrow_white_24dp);
+
+        //Set the PendingIntent binding with the Button.
+        Intent closeIntent = new Intent(ACTION_NOTIFY_CLOSE);
+        PendingIntent closePendingIntent = PendingIntent.getBroadcast(this, 0, closeIntent, 0);
+        remoteViews.setOnClickPendingIntent(R.id.bt_notify_close, closePendingIntent);
+
+        Intent nextIntent = new Intent(ACTION_NOTIFY_NEXT);
+        PendingIntent nextPendingIntent = PendingIntent.getBroadcast(this, 0, nextIntent, 0);
+        remoteViews.setOnClickPendingIntent(R.id.bt_notify_next, nextPendingIntent);
+
+        Intent previousIntent = new Intent(ACTION_NOTIFY_PREVIOUS);
+        PendingIntent previousPendingIntent = PendingIntent.getBroadcast(this, 0, previousIntent, 0);
+        remoteViews.setOnClickPendingIntent(R.id.bt_notify_previous, previousPendingIntent);
+
+        Intent playIntent = new Intent(ACTION_NOTIFY_PLAY);
+        PendingIntent playPendingIntent = PendingIntent.getBroadcast(this, 0, playIntent, 0);
+        remoteViews.setOnClickPendingIntent(R.id.bt_notify_play, playPendingIntent);
+
+
+        Notification notify = builder.setStyle(style)
+                .setContentIntent(pendingIntent)
+                .setWhen(System.currentTimeMillis())
+                .setTicker("Playing")
+                .setPriority(Notification.PRIORITY_DEFAULT)
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
+                .build();
+
+        notify.bigContentView = remoteViews;
+
+        notificationManager.notify(NOTIFICATION_ID, notify);
+
     }
 
     /*    public static int getState() {
@@ -147,8 +261,17 @@ public class PlayerService extends Service implements Playable, Skipable {
         addTimer();
         isInit = true;
         //"/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3"
-        String playUrl = "/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3";
-        if (music != null) playUrl = music.getUrl();
+        String playUrl = null;
+        if (music != null)
+            playUrl = music.getUrl();
+        else
+            try {
+                next();
+            } catch (NoMoreNextSongException e) {
+                Toast.makeText(PlayerService.this, "No more song!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
         Uri myUri = Uri.fromFile(new File(playUrl));
 
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -159,6 +282,9 @@ public class PlayerService extends Service implements Playable, Skipable {
             Toast.makeText(PlayerService.this, "出现异常", Toast.LENGTH_SHORT).show();
         }
         mediaPlayer.start();
+
+        //Save the current song in the sharePreference in order to reload the song when restart!
+        mPref.edit().putInt("music", music.getId()).apply();
 
         //Notify all the receiver that the duration has changed!
         mPref.edit().putInt("duration", mediaPlayer.getDuration()).apply();
@@ -206,6 +332,8 @@ public class PlayerService extends Service implements Playable, Skipable {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(notifyReceiver);
+        notificationManager.cancel(NOTIFICATION_ID);
         mediaPlayer.stop();
         mediaPlayer.release();
         mediaPlayer = null;
@@ -258,11 +386,49 @@ public class PlayerService extends Service implements Playable, Skipable {
 
     @Override
     public void next() throws NoMoreNextSongException {
-            Skip(musicQueue.next(music));
+        Skip(musicQueue.next(music));
     }
 
     @Override
     public void previous() throws NoMorePreviousSongException {
-            Skip(musicQueue.previous(music));
+        Skip(musicQueue.previous(music));
+    }
+
+    private class NotifyReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            switch (action) {
+                case ACTION_NOTIFY_CLOSE:
+                    onDestroy();
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                    break;
+                case ACTION_NOTIFY_NEXT:
+                    try {
+                        next();
+                    } catch (NoMoreNextSongException e) {
+                        Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case ACTION_NOTIFY_PREVIOUS:
+                    try {
+                        previous();
+                    } catch (NoMorePreviousSongException e) {
+                        Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case ACTION_NOTIFY_PLAY:
+                    if (isInit)
+                        continuePlay();
+                    else
+                        play();
+                    break;
+                case ACTION_NOTIFY_PAUSE:
+                    pause();
+                    break;
+            }
+        }
+
     }
 }

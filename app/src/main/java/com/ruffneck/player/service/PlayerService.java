@@ -64,9 +64,9 @@ public class PlayerService extends Service implements Playable, Skipable {
             ACTION_PLAY, ACTION_PAUSE, ACTION_CONTINUE_PLAY};
 
     private Music music = null;
-    private MusicLoader musicLoader = MusicLoader.getInstance(this);
+    private MusicLoader musicLoader ;
 
-    private MusicQueue musicQueue = new MusicArrayQueue(this);
+    private MusicQueue musicQueue ;
     //The mediaPlayer's state is stop , need to be start;
 //    public static final int STATE_STOP = 1;
 
@@ -82,6 +82,17 @@ public class PlayerService extends Service implements Playable, Skipable {
     private NotifyReceiver notifyReceiver;
 
     private MusicBinder mBinder = new MusicBinder();
+
+    private MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
+        @Override
+        public void onCompletion(MediaPlayer mp) {
+            try {
+                next();
+            } catch (NoMoreNextSongException e) {
+                Toast.makeText(PlayerService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
 
 //    private static int state = STATE_STOP;
 
@@ -162,6 +173,9 @@ public class PlayerService extends Service implements Playable, Skipable {
         mediaPlayer = new MediaPlayer();
         mPref = getSharedPreferences("config", MODE_PRIVATE);
 
+        musicLoader = MusicLoader.getInstance(this);
+        musicQueue = new MusicArrayQueue(this);
+
         initMusic();
 
         initNotification();
@@ -197,11 +211,18 @@ public class PlayerService extends Service implements Playable, Skipable {
         filter.addAction(ACTION_NOTIFY_PAUSE);
         filter.addAction(ACTION_NOTIFY_PLAY);
         filter.addAction(ACTION_NOTIFY_PREVIOUS);
-
         registerReceiver(notifyReceiver, filter);
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+        resetNotificationView();
+
+    }
+
+    /**
+     * Refresh Notification's View.
+     */
+    private void resetNotificationView() {
         NotificationCompat.Builder builder
                 = new NotificationCompat.Builder(this);
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle(builder);
@@ -211,37 +232,32 @@ public class PlayerService extends Service implements Playable, Skipable {
 
         //Set the notification's View by the current music state.
         RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.layout_notification);
-        remoteViews.setTextViewText(R.id.tv_notify_artist, music.getArtist());
-        remoteViews.setTextViewText(R.id.tv_notify_song_name, music.getTitle());
-        if (isPlaying()){
-            remoteViews.setImageViewResource(R.id.bt_notify_play, R.drawable.ic_pause_white_24dp);
-
+        if (music != null) {
+            remoteViews.setTextViewText(R.id.tv_notify_artist, music.getArtist());
+            remoteViews.setTextViewText(R.id.tv_notify_song_name, music.getTitle());
         }
-        else
+
+
+        if (isPlaying()) {
+            remoteViews.setImageViewResource(R.id.bt_notify_play, R.drawable.ic_pause_white_24dp);
+            setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_PAUSE, R.id.bt_notify_play);
+        } else {
             remoteViews.setImageViewResource(R.id.bt_notify_play, R.drawable.ic_play_arrow_white_24dp);
+            setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_PLAY, R.id.bt_notify_play);
+        }
 
         //Set the PendingIntent binding with the Button.
-        Intent closeIntent = new Intent(ACTION_NOTIFY_CLOSE);
-        PendingIntent closePendingIntent = PendingIntent.getBroadcast(this, 0, closeIntent, 0);
-        remoteViews.setOnClickPendingIntent(R.id.bt_notify_close, closePendingIntent);
+        setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_CLOSE, R.id.bt_notify_close);
+        setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_NEXT, R.id.bt_notify_next);
+        setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_PREVIOUS, R.id.bt_notify_previous);
 
-        Intent nextIntent = new Intent(ACTION_NOTIFY_NEXT);
-        PendingIntent nextPendingIntent = PendingIntent.getBroadcast(this, 0, nextIntent, 0);
-        remoteViews.setOnClickPendingIntent(R.id.bt_notify_next, nextPendingIntent);
-
-        Intent previousIntent = new Intent(ACTION_NOTIFY_PREVIOUS);
-        PendingIntent previousPendingIntent = PendingIntent.getBroadcast(this, 0, previousIntent, 0);
-        remoteViews.setOnClickPendingIntent(R.id.bt_notify_previous, previousPendingIntent);
-
-        Intent playIntent = new Intent(ACTION_NOTIFY_PLAY);
-        PendingIntent playPendingIntent = PendingIntent.getBroadcast(this, 0, playIntent, 0);
-        remoteViews.setOnClickPendingIntent(R.id.bt_notify_play, playPendingIntent);
-
+        if(music != null)
+            builder.setTicker("Playing :"+music.getTitle());
 
         Notification notify = builder.setStyle(style)
                 .setContentIntent(pendingIntent)
                 .setWhen(System.currentTimeMillis())
-                .setTicker("Playing")
+//                .setTicker("Playing : " + music.getTitle())
                 .setPriority(Notification.PRIORITY_DEFAULT)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
@@ -250,7 +266,20 @@ public class PlayerService extends Service implements Playable, Skipable {
         notify.bigContentView = remoteViews;
 
         notificationManager.notify(NOTIFICATION_ID, notify);
+    }
 
+
+    /**
+     * Set the remoteViews' view the listener.
+     *
+     * @param remoteViews       the remoteViews.
+     * @param actionNotifyClose the action string field.
+     * @param viewId            the view's Id need to be set
+     */
+    private void setRemoteViewsOnclick(RemoteViews remoteViews, String actionNotifyClose, int viewId) {
+        Intent intent = new Intent(actionNotifyClose);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        remoteViews.setOnClickPendingIntent(viewId, pendingIntent);
     }
 
     /*    public static int getState() {
@@ -258,15 +287,17 @@ public class PlayerService extends Service implements Playable, Skipable {
         }*/
     @Override
     public void play() {
-        addTimer();
+
+
         isInit = true;
         //"/storage/emulated/0/kgmusic/download/Hardwell - Hardwell On Air 160.mp3"
-        String playUrl = null;
+        String playUrl;
         if (music != null)
             playUrl = music.getUrl();
         else
             try {
                 next();
+                playUrl = music.getUrl();
             } catch (NoMoreNextSongException e) {
                 Toast.makeText(PlayerService.this, "No more song!", Toast.LENGTH_SHORT).show();
                 return;
@@ -278,6 +309,9 @@ public class PlayerService extends Service implements Playable, Skipable {
         try {
             mediaPlayer.setDataSource(getApplicationContext(), myUri);
             mediaPlayer.prepare();
+            mediaPlayer.seekTo(mPref.getInt("position", 0));
+            mediaPlayer.setOnCompletionListener(onCompletionListener);
+
         } catch (IOException e) {
             Toast.makeText(PlayerService.this, "出现异常", Toast.LENGTH_SHORT).show();
         }
@@ -289,8 +323,11 @@ public class PlayerService extends Service implements Playable, Skipable {
         //Notify all the receiver that the duration has changed!
         mPref.edit().putInt("duration", mediaPlayer.getDuration()).apply();
         sendBroadcast(new Intent(ACTION_UPDATE_DURATION));
-
         sendBroadcast(new Intent(ACTION_PLAY));
+
+        addTimer();
+        //Reset the notification.
+        resetNotificationView();
     }
 
     @Override
@@ -298,6 +335,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         mediaPlayer.pause();
 //        mPref.edit().putInt("state", STATE_PAUSE).apply();
         sendBroadcast(new Intent(ACTION_PAUSE));
+        resetNotificationView();
     }
 
 
@@ -306,6 +344,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         mediaPlayer.start();
 //        mPref.edit().putInt("state", STATE_PLAYING).apply();
         sendBroadcast(new Intent(ACTION_CONTINUE_PLAY));
+        resetNotificationView();
     }
 
     @Override
@@ -373,7 +412,9 @@ public class PlayerService extends Service implements Playable, Skipable {
     public void Skip(Music music) {
         PlayerService.this.music = music;
         mediaPlayer.reset();
-        play();
+
+        if(timer!= null)
+            timer.cancel();
 
         //Notify activity that need to update the music's information.
         mPref.edit().putInt("position", 0).apply();
@@ -382,6 +423,8 @@ public class PlayerService extends Service implements Playable, Skipable {
         bundle.putParcelable("music", music);
         intent.putExtras(bundle);
         sendBroadcast(intent);
+
+        play();
     }
 
     @Override

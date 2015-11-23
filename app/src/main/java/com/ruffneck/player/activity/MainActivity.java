@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
         mPref = getSharedPreferences("config", MODE_PRIVATE);
 
+        MusicLoader.getInstance(this);
 
         //Start and bind the PlayService to get the Accessibility to use the service's methods.
         startAndBindService();
@@ -78,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
         initToolbar();
 
         initRecyclerView();
-
     }
 
     /**
@@ -100,10 +100,8 @@ public class MainActivity extends AppCompatActivity {
                     playable.continuePlay();
                 }
 
-
             }
         };
-
 
         //Control the state of the current music.
         nextOnClickListener = new View.OnClickListener() {

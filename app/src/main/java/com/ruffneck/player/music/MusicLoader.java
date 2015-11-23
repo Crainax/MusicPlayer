@@ -42,7 +42,6 @@ public class MusicLoader {
             instance = new MusicLoader(context);
             mContext = context;
         }
-        String string;
         return instance;
     }
 

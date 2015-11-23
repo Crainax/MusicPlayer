@@ -26,7 +26,7 @@ import com.ruffneck.player.exception.NoMoreNextSongException;
 import com.ruffneck.player.exception.NoMorePreviousSongException;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
-import com.ruffneck.player.music.queue.MusicArrayQueue;
+import com.ruffneck.player.music.queue.MusicLoopQueue;
 import com.ruffneck.player.music.queue.MusicQueue;
 
 import java.io.File;
@@ -174,7 +174,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         mPref = getSharedPreferences("config", MODE_PRIVATE);
 
         musicLoader = MusicLoader.getInstance(this);
-        musicQueue = new MusicArrayQueue(this);
+        musicQueue = new MusicLoopQueue(this);
 
         initMusic();
 

@@ -9,7 +9,8 @@ import android.os.IBinder;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -28,9 +29,9 @@ import com.ruffneck.player.utils.SnackBarUtils;
 
 public class PlayActivity extends AppCompatActivity {
 
-    private Button bt_pause;
-    private Button bt_next;
-    private Button bt_previous;
+    private ImageButton bt_pause;
+    private ImageButton bt_next;
+    private ImageButton bt_previous;
     private TextView tv_process;
 
     private SeekBar sb_process;
@@ -106,20 +107,18 @@ public class PlayActivity extends AppCompatActivity {
         playOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String pause = getString(R.string.bt_pause);
-                String play = getString(R.string.bt_play);
                 //if the service isn't running , and you need to start and play.
                 if (!playable.isInit()) {
                     playable.play();
-                    bt_pause.setText(pause);
+                    bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
                 } else if (playable.isPlaying()) {
                     //If you need to pause.
                     playable.pause();
-                    bt_pause.setText(play);
+                    bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
                 } else {
                     //this brunch meaning you need to continue to play the music that you pause previously.
                     playable.continuePlay();
-                    bt_pause.setText(pause);
+                    bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
                 }
 
 
@@ -223,25 +222,25 @@ public class PlayActivity extends AppCompatActivity {
             //refresh the button's text rely on the media playable's state.
             if (RuntimeUtils.isServiceRunning(PlayActivity.this, PlayerService.class))
                 if (playable.isPlaying())
-                    bt_pause.setText(getString(R.string.bt_pause));
+                    bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
                 else
-                    bt_pause.setText(getString(R.string.bt_play));
+                    bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
             refreshProgress();
         }
     }
 
 
     private void initView() {
-
+        PopupMenu poop;
         parentView = findViewById(R.id.parent_play);
 
-        bt_pause = (Button) findViewById(R.id.bt_pause);
+        bt_pause = (ImageButton) findViewById(R.id.bt_pause);
         bt_pause.setOnClickListener(playOnClickListener);
 
 
-        bt_next = (Button) findViewById(R.id.bt_next);
+        bt_next = (ImageButton) findViewById(R.id.bt_next);
         bt_next.setOnClickListener(nextOnClickListener);
-        bt_previous = (Button) findViewById(R.id.bt_previous);
+        bt_previous = (ImageButton) findViewById(R.id.bt_previous);
         bt_previous.setOnClickListener(PreviousOnclickListener);
 
 
@@ -285,22 +284,19 @@ public class PlayActivity extends AppCompatActivity {
         @Override
         public void onContinuePlay(Intent intent) {
 
-            String pause = getString(R.string.bt_pause);
-            bt_pause.setText(pause);
+            bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
 
         }
 
         @Override
         public void onPause(Intent intent) {
-            String play = getString(R.string.bt_play);
-            bt_pause.setText(play);
+            bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
         }
 
         @Override
         public void onPlay(Intent intent) {
 
-            String pause = getString(R.string.bt_pause);
-            bt_pause.setText(pause);
+            bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
         }
 
         @Override

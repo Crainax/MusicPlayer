@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:id="@+id/parent_play"
-    >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <include layout="@layout/include_toolbar" />
 
@@ -11,27 +10,56 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/sb_process"
-        android:weightSum="3"
-        android:orientation="horizontal">
-        <Button
-            android:text="@string/bt_previous"
-            android:layout_weight="1"
-            android:id="@+id/bt_previous"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:text="@string/bt_play"
-            android:layout_weight="1"
-            android:id="@+id/bt_pause"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:text="@string/bt_next"
-            android:layout_weight="1"
-            android:id="@+id/bt_next"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        android:orientation="horizontal"
+        android:weightSum="3">
 
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_gravity="center_vertical"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:id="@+id/bt_previous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/shape_buttom"
+                android:padding="6dp"
+                android:src="@drawable/ic_skip_previous_black_48dp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:id="@+id/bt_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/shape_buttom"
+                android:padding="10dp"
+                android:src="@drawable/ic_play_arrow_black_48dp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:id="@+id/bt_next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/shape_buttom"
+                android:padding="6dp"
+                android:src="@drawable/ic_skip_next_black_48dp" />
+        </RelativeLayout>
     </LinearLayout>
 
     <SeekBar

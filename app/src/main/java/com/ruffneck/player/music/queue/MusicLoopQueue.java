@@ -15,12 +15,17 @@ public class MusicLoopQueue extends MusicQueue {
     @Override
     public Music next(Music currentMusic) throws NoMoreNextSongException {
 
+        if (currentMusic == null)
+            return musicList.get(0);
+
         return currentMusic;
     }
 
     @Override
     public Music previous(Music currentMusic) throws NoMorePreviousSongException {
 
+        if (currentMusic == null)
+            return musicList.get(0);
 
         return currentMusic;
     }

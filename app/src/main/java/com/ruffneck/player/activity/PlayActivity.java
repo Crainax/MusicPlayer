@@ -10,7 +10,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -231,7 +230,6 @@ public class PlayActivity extends AppCompatActivity {
 
 
     private void initView() {
-        PopupMenu poop;
         parentView = findViewById(R.id.parent_play);
 
         bt_pause = (ImageButton) findViewById(R.id.bt_pause);

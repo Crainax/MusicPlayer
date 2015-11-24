@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -111,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     skipable.next();
                 } catch (NoMoreNextSongException e) {
-                    SnackBarUtils.showExceptionSnackBar(rv_list,e,Snackbar.LENGTH_SHORT);
+                    SnackBarUtils.showExceptionSnackBar(rv_list, e, Snackbar.LENGTH_SHORT);
                 }
             }
         };
@@ -247,6 +249,28 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setTitle("Music List");
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_mode:
+
+
+
+                break;
+            case R.id.action_sequence:
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void refreshProgress() {

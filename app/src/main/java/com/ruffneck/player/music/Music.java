@@ -3,7 +3,7 @@ package com.ruffneck.player.music;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class Music implements Parcelable{
+public class Music implements Parcelable {
 
     private String displayName;
     private String album;
@@ -13,6 +13,7 @@ public class Music implements Parcelable{
     private String artist;
     private String url;
     private String title;
+    private long date;
 
     public Music() {
     }
@@ -25,6 +26,7 @@ public class Music implements Parcelable{
         size = in.readLong();
         artist = in.readString();
         url = in.readString();
+        date = in.readLong();
         title = in.readString();
     }
 
@@ -40,6 +42,15 @@ public class Music implements Parcelable{
             return new Music[size];
         }
     };
+
+
+    public long getDate() {
+        return date;
+    }
+
+    public void setDate(long date) {
+        this.date = date;
+    }
 
     public String getDisplayName() {
         return displayName;
@@ -116,7 +127,8 @@ public class Music implements Parcelable{
                 ", artist='" + artist + '\'' +
                 ", url='" + url + '\'' +
                 ", title='" + title + '\'' +
-                '}' + "\n";
+                ", date=" + date +
+                '}';
     }
 
     @Override
@@ -150,5 +162,6 @@ public class Music implements Parcelable{
         dest.writeString(artist);
         dest.writeString(url);
         dest.writeString(title);
+        dest.writeLong(date);
     }
 }

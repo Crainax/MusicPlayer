@@ -5,8 +5,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 
+import com.ruffneck.player.music.Comparator.DurationComparator;
 import com.ruffneck.player.music.Comparator.MusicComparator;
-import com.ruffneck.player.music.Comparator.NameComparator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class MusicLoader {
 
     private List<Music> musicList = new ArrayList<>();
 
-    private MusicComparator comparator = new NameComparator();
+    private MusicComparator comparator = new DurationComparator();
     /**
      * The instance.
      */
@@ -60,6 +60,7 @@ public class MusicLoader {
                 int artistCol = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
                 int urlCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
                 int titleCol = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+                int dateCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED);
 
                 String displayName = cursor.getString(displayNameCol);
                 String album = cursor.getString(albumCol);
@@ -69,6 +70,7 @@ public class MusicLoader {
                 String artist = cursor.getString(artistCol);
                 String url = cursor.getString(urlCol);
                 String title = cursor.getString(titleCol);
+                long date = cursor.getLong(dateCol);
 
                 music = new Music();
                 music.setDisplayName(displayName);
@@ -79,6 +81,7 @@ public class MusicLoader {
                 music.setArtist(artist);
                 music.setUrl(url);
                 music.setTitle(title);
+                music.setDate(date);
 
                 musicList.add(music);
 

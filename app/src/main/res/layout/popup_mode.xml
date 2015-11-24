@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/tv_mode_array"
+        style="@style/PopMenuTextView"
+        android:text="@string/mode_list" />
+
+
+    <TextView
+        android:id="@+id/tv_mode_loop"
+        style="@style/PopMenuTextView"
+        android:text="@string/mode_loop" />
+
+
+    <TextView
+        android:id="@+id/tv_mode_random"
+        style="@style/PopMenuTextView"
+        android:text="@string/mode_random" />
+
+
+</LinearLayout>

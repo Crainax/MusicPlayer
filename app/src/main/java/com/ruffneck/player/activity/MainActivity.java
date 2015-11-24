@@ -34,6 +34,9 @@ import com.ruffneck.player.music.Comparator.DurationComparator;
 import com.ruffneck.player.music.Comparator.NameComparator;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
+import com.ruffneck.player.music.queue.MusicArrayQueue;
+import com.ruffneck.player.music.queue.MusicLoopQueue;
+import com.ruffneck.player.music.queue.MusicRandomQueue;
 import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;
@@ -270,58 +273,111 @@ public class MainActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.action_mode:
+                showPopupModeWindow();
                 break;
             case R.id.action_sequence:
 
-
-                View view = getLayoutInflater().inflate(R.layout.popup_sequence, null);
-
-                final PopupWindow popup = new PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                        , true);
-
-                //When click the button tag.
-                view.findViewById(R.id.tv_sequence_name).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        musicLoader.setComparator(new NameComparator());
-                        Toast.makeText(MainActivity.this, "haha", Toast.LENGTH_SHORT).show();
-
-                        popup.dismiss();
-                    }
-                });
-                view.findViewById(R.id.tv_sequence_date).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        musicLoader.setComparator(new DateComparator());
-                        popup.dismiss();
-                    }
-                });
-                view.findViewById(R.id.tv_sequence_duration).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        musicLoader.setComparator(new DurationComparator());
-                        popup.dismiss();
-                    }
-                });
-
-                //Set the popupWindow's params
-                popup.setTouchable(true);
-                popup.setOutsideTouchable(true);
-                popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
-                popup.setTouchInterceptor(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        return false;
-                    }
-                });
-
-                //Show the popup Arch in the toolbar.
-//                popup.showAsDropDown(toolbar);
-                popup.showAsDropDown(toolbar,0,0, Gravity.RIGHT);
+                showPopupSequenceWindow();
                 break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Show the popupWindow that indicate the sequence.
+     */
+    private void showPopupSequenceWindow() {
+        View view = getLayoutInflater().inflate(R.layout.popup_sequence, null);
+
+        final PopupWindow popup = new PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                , true);
+
+        //When click the button tag.
+        view.findViewById(R.id.tv_sequence_name).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicLoader.setComparator(new NameComparator());
+                popup.dismiss();
+            }
+        });
+        view.findViewById(R.id.tv_sequence_date).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicLoader.setComparator(new DateComparator());
+                popup.dismiss();
+            }
+        });
+        view.findViewById(R.id.tv_sequence_duration).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicLoader.setComparator(new DurationComparator());
+                popup.dismiss();
+            }
+        });
+
+        //Set the popupWindow's params
+        popup.setTouchable(true);
+        popup.setOutsideTouchable(true);
+        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
+        popup.setTouchInterceptor(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return false;
+            }
+        });
+
+        //Show the popup Arch in the toolbar.
+//                popup.showAsDropDown(toolbar);
+        popup.showAsDropDown(toolbar,0,0, Gravity.END);
+    }
+
+    /**
+     * Show the popupWindow that indicate the play mode.
+     */
+    private void showPopupModeWindow() {
+        View view = getLayoutInflater().inflate(R.layout.popup_mode, null);
+
+        final PopupWindow popup = new PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                , true);
+
+        //When click the button tag.
+        view.findViewById(R.id.tv_mode_array).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                skipable.setQueue(new MusicArrayQueue(MainActivity.this));
+                popup.dismiss();
+            }
+        });
+        view.findViewById(R.id.tv_mode_loop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                skipable.setQueue(new MusicLoopQueue(MainActivity.this));
+                popup.dismiss();
+            }
+        });
+        view.findViewById(R.id.tv_mode_random).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                skipable.setQueue(new MusicRandomQueue(MainActivity.this));
+                popup.dismiss();
+            }
+        });
+
+        //Set the popupWindow's params
+        popup.setTouchable(true);
+        popup.setOutsideTouchable(true);
+        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
+        popup.setTouchInterceptor(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return false;
+            }
+        });
+
+        //Show the popup Arch in the toolbar.
+//                popup.showAsDropDown(toolbar);
+        popup.showAsDropDown(toolbar,0,0, Gravity.END);
     }
 
     private void refreshProgress() {
@@ -383,6 +439,7 @@ public class MainActivity extends AppCompatActivity {
     private void refreshMusicInfo(Music music) {
         if (music != null) {
             tv_bottom_artist.setText(music.getArtist());
+            System.out.println(music.toString());
             tv_bottom_song_name.setText(music.getTitle());
         }
     }

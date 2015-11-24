@@ -26,8 +26,8 @@ public class Music implements Parcelable {
         size = in.readLong();
         artist = in.readString();
         url = in.readString();
-        date = in.readLong();
         title = in.readString();
+        date = in.readLong();
     }
 
 

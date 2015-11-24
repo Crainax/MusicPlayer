@@ -10,4 +10,7 @@
     <string name="sequence_name">名称排序</string>
     <string name="sequence_date">日期排序</string>
     <string name="sequence_duration">时长排序</string>
+    <string name="mode_list">列表播放</string>
+    <string name="mode_loop">单曲循环</string>
+    <string name="mode_random">随机播放</string>
 </resources>

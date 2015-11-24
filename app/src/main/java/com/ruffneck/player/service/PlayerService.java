@@ -164,6 +164,11 @@ public class PlayerService extends Service implements Playable, Skipable {
         public void previous() throws NoMorePreviousSongException {
             PlayerService.this.previous();
         }
+
+        @Override
+        public void setQueue(MusicQueue musicQueue) {
+            PlayerService.this.setQueue(musicQueue);
+        }
     }
 
     @Override
@@ -435,6 +440,11 @@ public class PlayerService extends Service implements Playable, Skipable {
     @Override
     public void previous() throws NoMorePreviousSongException {
         Skip(musicQueue.previous(music));
+    }
+
+    @Override
+    public void setQueue(MusicQueue musicQueue) {
+        this.musicQueue = musicQueue;
     }
 
     private class NotifyReceiver extends BroadcastReceiver {

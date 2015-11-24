@@ -12,11 +12,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +29,9 @@ import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
 import com.ruffneck.player.activity.recyclerview.MusicListAdapter;
 import com.ruffneck.player.exception.NoMoreNextSongException;
+import com.ruffneck.player.music.Comparator.DateComparator;
+import com.ruffneck.player.music.Comparator.DurationComparator;
+import com.ruffneck.player.music.Comparator.NameComparator;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
 import com.ruffneck.player.receiver.ProgressReceiver;
@@ -59,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
     private Skipable skipable;
+    private MusicLoader musicLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
         mPref = getSharedPreferences("config", MODE_PRIVATE);
 
-        MusicLoader.getInstance(this);
+        musicLoader = MusicLoader.getInstance(this);
 
         //Start and bind the PlayService to get the Accessibility to use the service's methods.
         startAndBindService();
@@ -262,11 +270,54 @@ public class MainActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.action_mode:
-
-
-
                 break;
             case R.id.action_sequence:
+
+
+                View view = getLayoutInflater().inflate(R.layout.popup_sequence, null);
+
+                final PopupWindow popup = new PopupWindow(view, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                        , true);
+
+                //When click the button tag.
+                view.findViewById(R.id.tv_sequence_name).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        musicLoader.setComparator(new NameComparator());
+                        Toast.makeText(MainActivity.this, "haha", Toast.LENGTH_SHORT).show();
+
+                        popup.dismiss();
+                    }
+                });
+                view.findViewById(R.id.tv_sequence_date).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        musicLoader.setComparator(new DateComparator());
+                        popup.dismiss();
+                    }
+                });
+                view.findViewById(R.id.tv_sequence_duration).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        musicLoader.setComparator(new DurationComparator());
+                        popup.dismiss();
+                    }
+                });
+
+                //Set the popupWindow's params
+                popup.setTouchable(true);
+                popup.setOutsideTouchable(true);
+                popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
+                popup.setTouchInterceptor(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        return false;
+                    }
+                });
+
+                //Show the popup Arch in the toolbar.
+//                popup.showAsDropDown(toolbar);
+                popup.showAsDropDown(toolbar,0,0, Gravity.RIGHT);
                 break;
         }
 

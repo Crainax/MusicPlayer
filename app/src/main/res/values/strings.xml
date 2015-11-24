@@ -7,4 +7,7 @@
     <string name="bt_play">play</string>
     <string name="bt_pause">pause</string>
     <string name="bt_next">&gt;</string>
+    <string name="sequence_name">名称排序</string>
+    <string name="sequence_date">日期排序</string>
+    <string name="sequence_duration">时长排序</string>
 </resources>

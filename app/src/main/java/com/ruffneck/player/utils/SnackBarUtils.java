@@ -8,9 +8,21 @@ import android.view.View;
  */
 public class SnackBarUtils {
 
-    public static void showExceptionSnackBar(View view,Exception e,int duration){
+    public static void showExceptionSnackBar(View view, Exception e, int duration) {
 
         final Snackbar snackbar = Snackbar.make(view, e.getMessage(), duration);
+        snackbar.setAction("OK", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+            }
+        });
+        snackbar.show();
+    }
+
+    public static void showStringSnackBar(View view, String string, int duration) {
+
+        final Snackbar snackbar = Snackbar.make(view, string, duration);
         snackbar.setAction("OK", new View.OnClickListener() {
             @Override
             public void onClick(View v) {

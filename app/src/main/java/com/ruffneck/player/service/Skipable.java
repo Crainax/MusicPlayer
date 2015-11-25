@@ -1,8 +1,8 @@
 package com.ruffneck.player.service;
 
 
-import com.ruffneck.player.exception.NoMoreNextSongException;
-import com.ruffneck.player.exception.NoMorePreviousSongException;
+import com.ruffneck.player.music.exception.NoMoreNextSongException;
+import com.ruffneck.player.music.exception.NoMorePreviousSongException;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.queue.MusicQueue;
 

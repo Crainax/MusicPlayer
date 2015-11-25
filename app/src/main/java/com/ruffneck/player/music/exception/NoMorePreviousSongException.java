@@ -1,4 +1,4 @@
-package com.ruffneck.player.exception;
+package com.ruffneck.player.music.exception;
 
 public class NoMorePreviousSongException extends NoMoreMusicException{
     public NoMorePreviousSongException() {

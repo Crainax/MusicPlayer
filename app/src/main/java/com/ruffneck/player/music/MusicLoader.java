@@ -60,7 +60,7 @@ public class MusicLoader {
                 int artistCol = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
                 int urlCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
                 int titleCol = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-                int dateCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED);
+                int dateCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
 
                 String displayName = cursor.getString(displayNameCol);
                 String album = cursor.getString(albumCol);

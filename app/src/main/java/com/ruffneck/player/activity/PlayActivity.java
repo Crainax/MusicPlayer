@@ -14,8 +14,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ruffneck.player.R;
-import com.ruffneck.player.exception.NoMoreNextSongException;
-import com.ruffneck.player.exception.NoMorePreviousSongException;
+import com.ruffneck.player.music.exception.NoMoreNextSongException;
+import com.ruffneck.player.music.exception.NoMorePreviousSongException;
 import com.ruffneck.player.receiver.ProgressReceiver;
 import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;

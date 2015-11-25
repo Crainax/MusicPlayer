@@ -1,9 +1,14 @@
 package com.ruffneck.player.activity;
 
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
@@ -15,11 +20,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -28,12 +33,12 @@ import android.widget.Toast;
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
 import com.ruffneck.player.activity.recyclerview.MusicListAdapter;
-import com.ruffneck.player.exception.NoMoreNextSongException;
 import com.ruffneck.player.music.Comparator.DateComparator;
 import com.ruffneck.player.music.Comparator.DurationComparator;
 import com.ruffneck.player.music.Comparator.NameComparator;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
+import com.ruffneck.player.music.exception.NoMoreNextSongException;
 import com.ruffneck.player.music.queue.MusicArrayQueue;
 import com.ruffneck.player.music.queue.MusicLoopQueue;
 import com.ruffneck.player.music.queue.MusicRandomQueue;
@@ -42,17 +47,18 @@ import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.service.Skipable;
+import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
 import com.ruffneck.player.utils.SnackBarUtils;
+import com.ruffneck.player.view.MusicDetailView;
 
+import java.io.File;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar toolbar;
-    private ActionBar actionBar;
     private RecyclerView rv_list;
-    private LinearLayout stateBar;
 
     private MainReceiver mainReceiver = new MainReceiver();
     private SeekBar sb_process;
@@ -62,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_bottom_song_name;
     private TextView tv_bottom_artist;
     private Button bt_pause;
-    private Button bt_next;
 
     private View.OnClickListener playOnClickListener;
     private View.OnClickListener nextOnClickListener;
@@ -70,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
     private Skipable skipable;
     private MusicLoader musicLoader;
+    private MusicListAdapter musicAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         rv_list = (RecyclerView) findViewById(R.id.recycler_view);
 
-        stateBar = (LinearLayout) findViewById(R.id.statebar);
+        LinearLayout stateBar = (LinearLayout) findViewById(R.id.statebar);
         stateBar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -208,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         tv_bottom_song_name = (TextView) stateBar.findViewById(R.id.tv_bottom_song_name);
         tv_bottom_artist = (TextView) stateBar.findViewById(R.id.tv_bottom_artist);
         bt_pause = (Button) stateBar.findViewById(R.id.bt_bottom_pause);
-        bt_next = (Button) stateBar.findViewById(R.id.bt_bottom_next);
+        Button bt_next = (Button) stateBar.findViewById(R.id.bt_bottom_next);
         bt_next.setOnClickListener(nextOnClickListener);
         bt_pause.setOnClickListener(playOnClickListener);
         sb_process.setOnSeekBarChangeListener(sbChangedListener);
@@ -228,24 +234,85 @@ public class MainActivity extends AppCompatActivity {
         rv_list.setLayoutManager(new LinearLayoutManager(this));
         rv_list.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
-        MusicListAdapter musicAdapter = new MusicListAdapter(musicList);
+        musicAdapter = new MusicListAdapter(musicList);
         rv_list.setAdapter(musicAdapter);
+
 
         musicAdapter.setOnItemClickListener(new MusicListAdapter.OnItemClickListener() {
             @Override
             public void onClickListener(View v, int position) {
 //                Toast.makeText(MainActivity.this, "click" + position, Toast.LENGTH_SHORT).show();
-                skipable.Skip(MusicLoader.getInstance(MainActivity.this).getMusicList().get(position));
+                skipable.Skip(musicLoader.getMusicList().get(position));
             }
 
             @Override
-            public void onLongClickListener(View v, int position) {
-                Toast.makeText(MainActivity.this, "longClick" + position, Toast.LENGTH_SHORT).show();
+            public void onLongClickListener(View v, final int position) {
+//                Toast.makeText(MainActivity.this, "longClick" + position, Toast.LENGTH_SHORT).show();
+                PopupMenu popupMenu = new PopupMenu(MainActivity.this, v, Gravity.END);
+
+                getMenuInflater().inflate(R.menu.popup_longclick_music, popupMenu.getMenu());
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.action_play:
+                                skipable.Skip(musicLoader.getMusicList().get(position));
+                                break;
+                            case R.id.action_delete:
+                                deleteMusic(musicLoader.getMusicList().get(position));
+                                break;
+                            case R.id.action_detail:
+                                showPopupDetailWindow(musicLoader.getMusicList().get(position));
+                                break;
+                        }
+                        return true;
+                    }
+                });
+                popupMenu.show();
             }
         });
 
     }
 
+
+    /**
+     * Delete the specific music.
+     *
+     * @param music the music need to be deleted.
+     */
+    private void deleteMusic(final Music music) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        if (playable.getMusic().equals(music)) {
+            SnackBarUtils.showStringSnackBar(rv_list, "Delete Failed - The music is playing!", Snackbar.LENGTH_LONG);
+            return;
+        }
+
+        builder.setTitle("删除歌曲");
+        builder.setMessage("你确认要删除\"" + music.getTitle() + "\"吗?");
+
+        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                    musicLoader.getMusicList().remove(music);
+                    musicAdapter.notifyDataSetChanged();
+                    //send the broadcast to notify system update the media database.
+                    File file = new File(music.getUrl());
+                    if (file.delete()) {
+                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                        intent.setData(Uri.fromFile(file));
+                        sendBroadcast(intent);
+                    }
+                    SnackBarUtils.showStringSnackBar(rv_list, "Delete Succeed!", Snackbar.LENGTH_LONG);
+
+
+            }
+        });
+        builder.setNegativeButton("取消", null);
+
+        builder.show();
+
+    }
 
     /**
      * Initialize the toolbar as a actionbar,and set its title.
@@ -254,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
-        actionBar = getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
 
         assert actionBar != null;
         actionBar.setTitle("Music List");
@@ -268,6 +335,13 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+
+    /**
+     * Put the outside item into this method to handle it centrally.
+     *
+     * @param item
+     * @return
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
@@ -276,16 +350,43 @@ public class MainActivity extends AppCompatActivity {
                 showPopupModeWindow();
                 break;
             case R.id.action_sequence:
-
                 showPopupSequenceWindow();
+                break;
+            case R.id.action_play:
+                Toast.makeText(MainActivity.this, "sadfasdf", Toast.LENGTH_SHORT).show();
                 break;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+
     /**
-     * Show the popupWindow that indicate the sequence.
+     * Show the music info detail in the popupWindow sliding from the bottom.
+     */
+    private void showPopupDetailWindow(Music music) {
+
+        View view = getLayoutInflater().inflate(R.layout.popup_music_detail, null);
+
+        ((MusicDetailView)view.findViewById(R.id.mdv_song_name)).setContent(music.getTitle());
+        ((MusicDetailView)view.findViewById(R.id.mdv_album)).setContent(music.getAlbum());
+        ((MusicDetailView)view.findViewById(R.id.mdv_artist)).setContent(music.getArtist());
+        ((MusicDetailView)view.findViewById(R.id.mdv_duration)).setContent(FormatUtils.formatTime(music.getDuration()));
+        ((MusicDetailView)view.findViewById(R.id.mdv_size)).setContent(FormatUtils.formatSize(music.getSize()));
+        ((MusicDetailView)view.findViewById(R.id.mdv_url)).setContent(music.getUrl());
+
+        PopupWindow popupWindow = new PopupWindow(view, ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+
+        //Set the popupWindow's params.
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.showAtLocation(getWindow().getDecorView(),
+                Gravity.CENTER_HORIZONTAL|Gravity.BOTTOM,0,0);
+
+    }
+
+    /**
+     * Show the popupWindow that indicating the sequence.
      */
     private void showPopupSequenceWindow() {
         View view = getLayoutInflater().inflate(R.layout.popup_sequence, null);
@@ -294,46 +395,66 @@ public class MainActivity extends AppCompatActivity {
                 , true);
 
         //When click the button tag.
-        view.findViewById(R.id.tv_sequence_name).setOnClickListener(new View.OnClickListener() {
+        TextView tv_sequence_name = (TextView) view.findViewById(R.id.tv_sequence_name);
+        TextView tv_sequence_date = (TextView) view.findViewById(R.id.tv_sequence_date);
+        TextView tv_sequence_duration = (TextView) view.findViewById(R.id.tv_sequence_duration);
+
+        tv_sequence_name.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new NameComparator());
+                musicAdapter.notifyDataSetChanged();
                 popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
+
             }
         });
-        view.findViewById(R.id.tv_sequence_date).setOnClickListener(new View.OnClickListener() {
+        tv_sequence_date.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new DateComparator());
+                musicAdapter.notifyDataSetChanged();
                 popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
             }
         });
-        view.findViewById(R.id.tv_sequence_duration).setOnClickListener(new View.OnClickListener() {
+        tv_sequence_duration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new DurationComparator());
+                musicAdapter.notifyDataSetChanged();
                 popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
             }
         });
 
         //Set the popupWindow's params
+        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
+/*
         popup.setTouchable(true);
         popup.setOutsideTouchable(true);
-        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
         popup.setTouchInterceptor(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 return false;
             }
         });
+*/
 
-        //Show the popup Arch in the toolbar.
+//        Show the popup Arch in the toolbar.
 //                popup.showAsDropDown(toolbar);
-        popup.showAsDropDown(toolbar,0,0, Gravity.END);
+        popup.showAsDropDown(toolbar, 0, 0, Gravity.END);
+
+/*
+        popup.showAtLocation(getWindow().getDecorView(),
+                Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);*/
     }
 
     /**
-     * Show the popupWindow that indicate the play mode.
+     * Show the popupWindow that indicating the play mode.
      */
     private void showPopupModeWindow() {
         View view = getLayoutInflater().inflate(R.layout.popup_mode, null);
@@ -347,6 +468,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 skipable.setQueue(new MusicArrayQueue(MainActivity.this));
                 popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
             }
         });
         view.findViewById(R.id.tv_mode_loop).setOnClickListener(new View.OnClickListener() {
@@ -354,6 +477,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 skipable.setQueue(new MusicLoopQueue(MainActivity.this));
                 popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
             }
         });
         view.findViewById(R.id.tv_mode_random).setOnClickListener(new View.OnClickListener() {
@@ -361,23 +486,25 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 skipable.setQueue(new MusicRandomQueue(MainActivity.this));
                 popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
             }
         });
 
-        //Set the popupWindow's params
-        popup.setTouchable(true);
+/*        popup.setTouchable(true);
         popup.setOutsideTouchable(true);
-        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
         popup.setTouchInterceptor(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 return false;
             }
-        });
+        });*/
 
+        //Set the popupWindow's params
+        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.shape_popup));
         //Show the popup Arch in the toolbar.
 //                popup.showAsDropDown(toolbar);
-        popup.showAsDropDown(toolbar,0,0, Gravity.END);
+        popup.showAsDropDown(toolbar, 0, 0, Gravity.END);
     }
 
     private void refreshProgress() {
@@ -410,6 +537,7 @@ public class MainActivity extends AppCompatActivity {
             bt_pause.setText(pause);
         }
 
+
         @Override
         public void onSkipSong(Intent intent) {
             refreshProgress();
@@ -439,7 +567,6 @@ public class MainActivity extends AppCompatActivity {
     private void refreshMusicInfo(Music music) {
         if (music != null) {
             tv_bottom_artist.setText(music.getArtist());
-            System.out.println(music.toString());
             tv_bottom_song_name.setText(music.getTitle());
         }
     }

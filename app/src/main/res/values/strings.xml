@@ -13,4 +13,7 @@
     <string name="mode_list">列表播放</string>
     <string name="mode_loop">单曲循环</string>
     <string name="mode_random">随机播放</string>
+    <string name="popup_menu_play">播放</string>
+    <string name="action_menu_delete">删除</string>
+    <string name="action_menu_detail">歌曲详情</string>
 </resources>

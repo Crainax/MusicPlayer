@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorSnackBar"
+    android:paddingTop="24dp"
+    android:paddingBottom="24dp"
+    android:orientation="vertical">
+
+    <com.ruffneck.player.view.MusicDetailView
+        android:id="@+id/mdv_song_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:content="Bounce"
+        app:titleName="标题:" />
+
+    <com.ruffneck.player.view.MusicDetailView
+        android:id="@+id/mdv_artist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:content="Calvin Harris"
+        app:titleName="歌手:" />
+
+    <com.ruffneck.player.view.MusicDetailView
+        android:id="@+id/mdv_album"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:content="Different "
+        app:titleName="专辑:" />
+
+    <com.ruffneck.player.view.MusicDetailView
+        android:id="@+id/mdv_duration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:content="60:12"
+        app:titleName="时长:" />
+
+    <com.ruffneck.player.view.MusicDetailView
+        android:id="@+id/mdv_size"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:content="12.45M"
+        app:titleName="大小:"/>
+
+
+    <com.ruffneck.player.view.MusicDetailView
+        android:id="@+id/mdv_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:content="/storage/emulated/0/kgmusic/download/Avicii - Liar Liar.mp3"
+        app:titleName="路径:"/>
+
+
+</LinearLayout>

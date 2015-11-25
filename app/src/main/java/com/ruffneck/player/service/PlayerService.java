@@ -22,8 +22,8 @@ import android.widget.Toast;
 
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.MainActivity;
-import com.ruffneck.player.exception.NoMoreNextSongException;
-import com.ruffneck.player.exception.NoMorePreviousSongException;
+import com.ruffneck.player.music.exception.NoMoreNextSongException;
+import com.ruffneck.player.music.exception.NoMorePreviousSongException;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
 import com.ruffneck.player.music.queue.MusicLoopQueue;
@@ -180,6 +180,7 @@ public class PlayerService extends Service implements Playable, Skipable {
 
         musicLoader = MusicLoader.getInstance(this);
         musicQueue = new MusicLoopQueue(this);
+
 
         initMusic();
 

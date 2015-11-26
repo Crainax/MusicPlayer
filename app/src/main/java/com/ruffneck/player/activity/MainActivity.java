@@ -12,7 +12,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,7 +30,6 @@ import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
@@ -59,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Toolbar toolbar;
     private RecyclerView rv_list;
+    private DrawerLayout mDrawer;
+
 
     private MainReceiver mainReceiver = new MainReceiver();
     private SeekBar sb_process;
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private Skipable skipable;
     private MusicLoader musicLoader;
     private MusicListAdapter musicAdapter;
+    private ActionBarDrawerToggle mToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +102,18 @@ public class MainActivity extends AppCompatActivity {
         initToolbar();
 
         initRecyclerView();
+
+        initDrawer();
+    }
+
+    //Initialize the mDrawer layout.
+    private void initDrawer() {
+
+        mToggle = new ActionBarDrawerToggle(this, mDrawer, toolbar, R.string.drawer_open, R.string.drawer_close);
+        //Synchronize the Toggle.
+        mToggle.syncState();
+        mDrawer.setDrawerListener(mToggle);
+
     }
 
     /**
@@ -218,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
         bt_next.setOnClickListener(nextOnClickListener);
         bt_pause.setOnClickListener(playOnClickListener);
         sb_process.setOnSeekBarChangeListener(sbChangedListener);
+        mDrawer = (DrawerLayout) findViewById(R.id.drawer);
     }
 
 
@@ -294,16 +311,16 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                    musicLoader.getMusicList().remove(music);
-                    musicAdapter.notifyDataSetChanged();
-                    //send the broadcast to notify system update the media database.
-                    File file = new File(music.getUrl());
-                    if (file.delete()) {
-                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                        intent.setData(Uri.fromFile(file));
-                        sendBroadcast(intent);
-                    }
-                    SnackBarUtils.showStringSnackBar(rv_list, "Delete Succeed!", Snackbar.LENGTH_LONG);
+                musicLoader.getMusicList().remove(music);
+                musicAdapter.notifyDataSetChanged();
+                //send the broadcast to notify system update the media database.
+                File file = new File(music.getUrl());
+                if (file.delete()) {
+                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    intent.setData(Uri.fromFile(file));
+                    sendBroadcast(intent);
+                }
+                SnackBarUtils.showStringSnackBar(rv_list, "Delete Succeed!", Snackbar.LENGTH_LONG);
 
 
             }
@@ -352,9 +369,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_sequence:
                 showPopupSequenceWindow();
                 break;
-            case R.id.action_play:
-                Toast.makeText(MainActivity.this, "sadfasdf", Toast.LENGTH_SHORT).show();
-                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -368,12 +382,12 @@ public class MainActivity extends AppCompatActivity {
 
         View view = getLayoutInflater().inflate(R.layout.popup_music_detail, null);
 
-        ((MusicDetailView)view.findViewById(R.id.mdv_song_name)).setContent(music.getTitle());
-        ((MusicDetailView)view.findViewById(R.id.mdv_album)).setContent(music.getAlbum());
-        ((MusicDetailView)view.findViewById(R.id.mdv_artist)).setContent(music.getArtist());
-        ((MusicDetailView)view.findViewById(R.id.mdv_duration)).setContent(FormatUtils.formatTime(music.getDuration()));
-        ((MusicDetailView)view.findViewById(R.id.mdv_size)).setContent(FormatUtils.formatSize(music.getSize()));
-        ((MusicDetailView)view.findViewById(R.id.mdv_url)).setContent(music.getUrl());
+        ((MusicDetailView) view.findViewById(R.id.mdv_song_name)).setContent(music.getTitle());
+        ((MusicDetailView) view.findViewById(R.id.mdv_album)).setContent(music.getAlbum());
+        ((MusicDetailView) view.findViewById(R.id.mdv_artist)).setContent(music.getArtist());
+        ((MusicDetailView) view.findViewById(R.id.mdv_duration)).setContent(FormatUtils.formatTime(music.getDuration()));
+        ((MusicDetailView) view.findViewById(R.id.mdv_size)).setContent(FormatUtils.formatSize(music.getSize()));
+        ((MusicDetailView) view.findViewById(R.id.mdv_url)).setContent(music.getUrl());
 
         PopupWindow popupWindow = new PopupWindow(view, ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -381,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
         //Set the popupWindow's params.
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.showAtLocation(getWindow().getDecorView(),
-                Gravity.CENTER_HORIZONTAL|Gravity.BOTTOM,0,0);
+                Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0);
 
     }
 

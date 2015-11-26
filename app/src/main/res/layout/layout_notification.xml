@@ -46,16 +46,16 @@
 
             <TextView
                 android:id="@+id/tv_notify_song_name"
+                android:layout_weight="1"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_margin="5dp"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:layout_weight="1"
-                android:text="@string/tv_song_name"
                 android:textColor="@android:color/white"
                 android:textSize="15sp"
                 android:textStyle="bold"
+                android:text="@string/tv_song_name"
                 />
 
             <TextView

@@ -16,4 +16,6 @@
     <string name="popup_menu_play">播放</string>
     <string name="action_menu_delete">删除</string>
     <string name="action_menu_detail">歌曲详情</string>
+    <string name="drawer_open">开启</string>
+    <string name="drawer_close">关闭</string>
 </resources>

@@ -4,7 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <include layout="@layout/include_toolbar" />
+    <include layout="@layout/include_toolbar"
+        android:id="@+id/toolbar"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
+        android:text="sdf"
+        android:onClick="loadImage"
+        android:id="@+id/bt_text"
+        />
+
+    <ImageView
+        android:id="@+id/iv_singer_big"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_below="@id/bt_text"/>
 
     <LinearLayout
         android:layout_margin="10dp"

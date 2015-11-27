@@ -299,6 +299,9 @@ public class MainActivity extends AppCompatActivity {
                             case R.id.action_detail:
                                 showPopupDetailWindow(musicLoader.getMusicList().get(position));
                                 break;
+                            case R.id.action_singer:
+
+                                break;
                         }
                         return true;
                     }

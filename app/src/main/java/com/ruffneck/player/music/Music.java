@@ -3,6 +3,9 @@ package com.ruffneck.player.music;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Music implements Parcelable {
 
     private String displayName;
@@ -57,6 +60,18 @@ public class Music implements Parcelable {
     }
 
     public void setDisplayName(String displayName) {
+
+        String regex = "(.*?) - (.*?)\\.mp3";
+        Matcher matcher = Pattern.compile(regex).matcher(displayName);
+
+        while(matcher.find()){
+            String artist = matcher.group(1);
+            String title = matcher.group(2);
+
+            this.artist = artist;
+            this.title = title;
+        }
+
         this.displayName = displayName;
     }
 
@@ -93,10 +108,14 @@ public class Music implements Parcelable {
     }
 
     public String getArtist() {
+
         return artist;
     }
 
     public void setArtist(String artist) {
+
+        if(this.artist != null )return;
+
         this.artist = artist;
     }
 
@@ -113,6 +132,7 @@ public class Music implements Parcelable {
     }
 
     public void setTitle(String title) {
+        if(this.title != null )return;
         this.title = title;
     }
 

@@ -10,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -24,6 +25,13 @@ import com.ruffneck.player.service.Skipable;
 import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
 import com.ruffneck.player.utils.SnackBarUtils;
+import com.squareup.picasso.Picasso;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 
 
 public class PlayActivity extends AppCompatActivity {
@@ -32,6 +40,7 @@ public class PlayActivity extends AppCompatActivity {
     private ImageButton bt_next;
     private ImageButton bt_previous;
     private TextView tv_process;
+    private ImageView iv_singer;
 
     private SeekBar sb_process;
 
@@ -247,6 +256,8 @@ public class PlayActivity extends AppCompatActivity {
 
         tv_process = (TextView) findViewById(R.id.tv_process);
 
+        iv_singer = (ImageView) findViewById(R.id.iv_singer_big);
+
         refreshProgress();
     }
 
@@ -320,5 +331,35 @@ public class PlayActivity extends AppCompatActivity {
                     FormatUtils.formatTime(duration)));
         }
 
+    }
+
+    public void loadImage(View view){
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                Document document = null;
+                try {
+                    document = Jsoup.connect("http://so.yinyuetai.com/mv?keyword=张杰").userAgent("Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.93 Safari/537.36").get();
+                    final Elements img = document.select("img.photo");
+                    System.out.println("document = " + img.attr("src"));
+                    iv_singer.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Picasso.with(PlayActivity.this)
+                                    .load(img.attr("src"))
+                                    .fit()
+                                    .into(iv_singer);
+                        }
+                    });
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        };
+
+        new Thread(runnable).start();
     }
 }

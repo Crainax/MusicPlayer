@@ -18,4 +18,5 @@
     <string name="action_menu_detail">歌曲详情</string>
     <string name="drawer_open">开启</string>
     <string name="drawer_close">关闭</string>
+    <string name="action_menu_singer">加载歌手</string>
 </resources>

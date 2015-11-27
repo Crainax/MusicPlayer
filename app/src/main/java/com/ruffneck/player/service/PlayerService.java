@@ -229,6 +229,9 @@ public class PlayerService extends Service implements Playable, Skipable {
      * Refresh Notification's View.
      */
     private void resetNotificationView() {
+
+        if(!isInit)return;
+
         NotificationCompat.Builder builder
                 = new NotificationCompat.Builder(this);
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle(builder);
@@ -383,7 +386,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         mediaPlayer.release();
         mediaPlayer = null;
 //        mPref.edit().putInt("state", STATE_STOP).apply();
-        System.out.println("PlayerService.onDestroy");
+//        System.out.println("PlayerService.onDestroy");
         timer.cancel();
         timer = null;
     }
@@ -456,6 +459,8 @@ public class PlayerService extends Service implements Playable, Skipable {
             switch (action) {
                 case ACTION_NOTIFY_CLOSE:
                     onDestroy();
+                    notificationManager.cancel(NOTIFICATION_ID);
+                    isInit = false;
                     android.os.Process.killProcess(android.os.Process.myPid());
                     break;
                 case ACTION_NOTIFY_NEXT:

@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow;
@@ -52,16 +53,20 @@ import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
 import com.ruffneck.player.utils.SnackBarUtils;
 import com.ruffneck.player.view.MusicDetailView;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar toolbar;
     private RecyclerView rv_list;
     private DrawerLayout mDrawer;
-
+    private ImageView mUserBack;
+    private CircleImageView mUserImage;
 
     private MainReceiver mainReceiver = new MainReceiver();
     private SeekBar sb_process;
@@ -113,6 +118,16 @@ public class MainActivity extends AppCompatActivity {
         //Synchronize the Toggle.
         mToggle.syncState();
         mDrawer.setDrawerListener(mToggle);
+
+
+        Picasso.with(this)
+                .load(R.drawable.back)
+                .into(mUserBack);
+
+        Picasso.with(this)
+                .load(R.drawable.calvin)
+                .fit()
+                .into(mUserImage);
 
     }
 
@@ -235,6 +250,9 @@ public class MainActivity extends AppCompatActivity {
         bt_pause.setOnClickListener(playOnClickListener);
         sb_process.setOnSeekBarChangeListener(sbChangedListener);
         mDrawer = (DrawerLayout) findViewById(R.id.drawer);
+        mUserBack = (ImageView) mDrawer.findViewById(R.id.iv_user_back);
+        mUserImage = (CircleImageView) mDrawer.findViewById(R.id.iv_portrait);
+
     }
 
 
@@ -394,6 +412,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Set the popupWindow's params.
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setAnimationStyle(R.style.PopupWindowAnim);
         popupWindow.showAtLocation(getWindow().getDecorView(),
                 Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0);
 

@@ -28,6 +28,8 @@ import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
 import com.ruffneck.player.music.queue.MusicLoopQueue;
 import com.ruffneck.player.music.queue.MusicQueue;
+import com.ruffneck.player.task.LoadImageTask;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,9 +66,9 @@ public class PlayerService extends Service implements Playable, Skipable {
             ACTION_PLAY, ACTION_PAUSE, ACTION_CONTINUE_PLAY};
 
     private Music music = null;
-    private MusicLoader musicLoader ;
+    private MusicLoader musicLoader;
 
-    private MusicQueue musicQueue ;
+    private MusicQueue musicQueue;
     //The mediaPlayer's state is stop , need to be start;
 //    public static final int STATE_STOP = 1;
 
@@ -230,7 +232,7 @@ public class PlayerService extends Service implements Playable, Skipable {
      */
     private void resetNotificationView() {
 
-        if(!isInit)return;
+        if (!isInit) return;
 
         NotificationCompat.Builder builder
                 = new NotificationCompat.Builder(this);
@@ -240,10 +242,12 @@ public class PlayerService extends Service implements Playable, Skipable {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         //Set the notification's View by the current music state.
-        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.layout_notification);
+        final RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.layout_notification);
         if (music != null) {
             remoteViews.setTextViewText(R.id.tv_notify_artist, music.getArtist());
             remoteViews.setTextViewText(R.id.tv_notify_song_name, music.getTitle());
+
+
         }
 
 
@@ -260,10 +264,10 @@ public class PlayerService extends Service implements Playable, Skipable {
         setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_NEXT, R.id.bt_notify_next);
         setRemoteViewsOnclick(remoteViews, ACTION_NOTIFY_PREVIOUS, R.id.bt_notify_previous);
 
-        if(music != null)
-            builder.setTicker("Playing :"+music.getTitle());
+        if (music != null)
+            builder.setTicker("Playing :" + music.getTitle());
 
-        Notification notify = builder.setStyle(style)
+        final Notification notify = builder.setStyle(style)
                 .setContentIntent(pendingIntent)
                 .setWhen(System.currentTimeMillis())
 //                .setTicker("Playing : " + music.getTitle())
@@ -273,6 +277,34 @@ public class PlayerService extends Service implements Playable, Skipable {
                 .build();
 
         notify.bigContentView = remoteViews;
+
+        if (music != null) {
+            //Update the singer's image.
+            LoadImageTask task = new LoadImageTask(this);
+            task.setUpdateCallBack(new LoadImageTask.UpdateCallBack() {
+                @Override
+                public void onUpdate(Music music) {
+                    Picasso.with(PlayerService.this)
+                            .load(music.getImgUrl())
+                            .centerCrop()
+                            .resizeDimen(R.dimen.notification_icon_width_height, R.dimen.notification_icon_width_height)
+                            .into(remoteViews, R.id.iv_notify, NOTIFICATION_ID, notify);
+                }
+            });
+
+            task.setUpdateFailCallBack(new LoadImageTask.UpdateFailCallBack() {
+                @Override
+                public void onUpdateFail(Music music) {
+                    Picasso.with(PlayerService.this)
+                            .load(R.drawable.placeholder_civ_singer)
+                            .centerCrop()
+                            .resizeDimen(R.dimen.notification_icon_width_height, R.dimen.notification_icon_width_height)
+                            .into(remoteViews, R.id.iv_notify, NOTIFICATION_ID, notify);
+                }
+            });
+            task.execute(music);
+        }
+
 
         notificationManager.notify(NOTIFICATION_ID, notify);
     }
@@ -422,7 +454,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         PlayerService.this.music = music;
         mediaPlayer.reset();
 
-        if(timer!= null)
+        if (timer != null)
             timer.cancel();
 
         //Notify activity that need to update the music's information.

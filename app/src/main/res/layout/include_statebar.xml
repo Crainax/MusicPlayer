@@ -22,11 +22,12 @@
         android:orientation="horizontal">
 
         <ImageView
+            android:background="@drawable/shape_bottom_singer"
             android:id="@+id/iv_bottom_singer"
             android:layout_width="64dip"
             android:layout_height="64dip"
-            android:layout_margin="5dp"
-            android:src="@android:drawable/ic_menu_share" />
+            android:layout_margin="10dp"
+            android:src="@drawable/placeholder_civ_singer" />
 
         <RelativeLayout
             android:layout_width="0dp"
@@ -64,6 +65,7 @@
 
 
             <com.ruffneck.player.view.FocusTextView
+                android:layout_marginLeft="5dp"
                 android:id="@+id/tv_bottom_song_name"
                 style="@style/SongNameStyle.Bottom"
                 android:layout_alignParentLeft="true"
@@ -73,6 +75,7 @@
                 android:layout_toStartOf="@id/ll_bt" />
 
             <com.ruffneck.player.view.FocusTextView
+                android:layout_marginLeft="5dp"
                 android:id="@+id/tv_bottom_artist"
                 style="@style/ArtistStyle.Bottom"
                 android:layout_alignParentBottom="true"

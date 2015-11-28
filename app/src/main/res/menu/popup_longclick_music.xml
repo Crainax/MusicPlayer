@@ -13,8 +13,5 @@
         android:id="@+id/action_detail"
         android:title="@string/action_menu_detail" />
 
-    <item
-        android:id="@+id/action_singer"
-        android:title="@string/action_menu_singer" />
 
 </menu>

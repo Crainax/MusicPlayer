@@ -17,6 +17,7 @@ public class Music implements Parcelable {
     private String url;
     private String title;
     private long date;
+    private String imgUrl;
 
     public Music() {
     }
@@ -31,6 +32,7 @@ public class Music implements Parcelable {
         url = in.readString();
         title = in.readString();
         date = in.readLong();
+        imgUrl = in.readString();
     }
 
 
@@ -136,6 +138,14 @@ public class Music implements Parcelable {
         this.title = title;
     }
 
+    public String getImgUrl() {
+        return imgUrl;
+    }
+
+    public void setImgUrl(String imgUrl) {
+        this.imgUrl = imgUrl;
+    }
+
     @Override
     public String toString() {
         return "Music{" +
@@ -183,5 +193,6 @@ public class Music implements Parcelable {
         dest.writeString(url);
         dest.writeString(title);
         dest.writeLong(date);
+        dest.writeString(imgUrl);
     }
 }

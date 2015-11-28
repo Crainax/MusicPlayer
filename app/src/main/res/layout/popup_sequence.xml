@@ -23,5 +23,10 @@
         style="@style/PopMenuTextView"
         android:text="@string/sequence_duration" />
 
+    <TextView
+        android:id="@+id/tv_sequence_artist"
+        style="@style/PopMenuTextView"
+        android:text="@string/sequence_artist" />
+
 
 </LinearLayout>

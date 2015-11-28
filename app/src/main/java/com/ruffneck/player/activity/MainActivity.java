@@ -33,8 +33,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ruffneck.player.R;
-import com.ruffneck.player.activity.recyclerview.DividerItemDecoration;
 import com.ruffneck.player.activity.recyclerview.MusicListAdapter;
+import com.ruffneck.player.music.Comparator.ArtistComparator;
 import com.ruffneck.player.music.Comparator.DateComparator;
 import com.ruffneck.player.music.Comparator.DurationComparator;
 import com.ruffneck.player.music.Comparator.NameComparator;
@@ -49,6 +49,7 @@ import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.service.Skipable;
+import com.ruffneck.player.task.LoadImageTask;
 import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
 import com.ruffneck.player.utils.SnackBarUtils;
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_bottom_song_name;
     private TextView tv_bottom_artist;
     private Button bt_pause;
+    private ImageView iv_bottom_singer;
 
     private View.OnClickListener playOnClickListener;
     private View.OnClickListener nextOnClickListener;
@@ -244,6 +246,8 @@ public class MainActivity extends AppCompatActivity {
         sb_process = (SeekBar) stateBar.findViewById(R.id.sb_bottom_process);
         tv_bottom_song_name = (TextView) stateBar.findViewById(R.id.tv_bottom_song_name);
         tv_bottom_artist = (TextView) stateBar.findViewById(R.id.tv_bottom_artist);
+        iv_bottom_singer = (ImageView) stateBar.findViewById(R.id.iv_bottom_singer);
+
         bt_pause = (Button) stateBar.findViewById(R.id.bt_bottom_pause);
         Button bt_next = (Button) stateBar.findViewById(R.id.bt_bottom_next);
         bt_next.setOnClickListener(nextOnClickListener);
@@ -267,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
 
         rv_list.setHasFixedSize(true);
         rv_list.setLayoutManager(new LinearLayoutManager(this));
-        rv_list.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
+//        rv_list.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
         musicAdapter = new MusicListAdapter(musicList);
         rv_list.setAdapter(musicAdapter);
@@ -298,9 +302,6 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case R.id.action_detail:
                                 showPopupDetailWindow(musicLoader.getMusicList().get(position));
-                                break;
-                            case R.id.action_singer:
-
                                 break;
                         }
                         return true;
@@ -434,6 +435,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tv_sequence_name = (TextView) view.findViewById(R.id.tv_sequence_name);
         TextView tv_sequence_date = (TextView) view.findViewById(R.id.tv_sequence_date);
         TextView tv_sequence_duration = (TextView) view.findViewById(R.id.tv_sequence_duration);
+        TextView tv_sequence_artist = (TextView) view.findViewById(R.id.tv_sequence_artist);
 
         tv_sequence_name.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -460,6 +462,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new DurationComparator());
+                musicAdapter.notifyDataSetChanged();
+                popup.dismiss();
+                SnackBarUtils.showStringSnackBar(rv_list,
+                        ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
+            }
+        });
+        tv_sequence_artist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicLoader.setComparator(new ArtistComparator());
                 musicAdapter.notifyDataSetChanged();
                 popup.dismiss();
                 SnackBarUtils.showStringSnackBar(rv_list,
@@ -604,6 +616,34 @@ public class MainActivity extends AppCompatActivity {
         if (music != null) {
             tv_bottom_artist.setText(music.getArtist());
             tv_bottom_song_name.setText(music.getTitle());
+
+            //Update the singer's image.
+            LoadImageTask task = new LoadImageTask(this);
+            task.setUpdateCallBack(new LoadImageTask.UpdateCallBack() {
+                @Override
+                public void onUpdate(Music music) {
+                    Picasso.with(MainActivity.this)
+                            .load(music.getImgUrl())
+                            .error(R.drawable.placeholder_civ_singer)
+                            .placeholder(R.drawable.placeholder_civ_singer)
+                            .centerCrop()
+                            .fit()
+                            .into(iv_bottom_singer);
+                }
+            });
+
+            task.setUpdateFailCallBack(new LoadImageTask.UpdateFailCallBack() {
+                @Override
+                public void onUpdateFail(Music music) {
+                    Picasso.with(MainActivity.this)
+                            .load(R.drawable.placeholder_civ_singer)
+                            .centerCrop()
+                            .fit()
+                            .into(iv_bottom_singer);
+                }
+            });
+
+            task.execute(playable.getMusic());
         }
     }
 

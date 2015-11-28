@@ -103,7 +103,6 @@ public class PlayActivity extends AppCompatActivity {
         //Initialize the button and all the views.
         initView();
 
-
     }
 
     /**

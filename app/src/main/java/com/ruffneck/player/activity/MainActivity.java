@@ -590,7 +590,6 @@ public class MainActivity extends AppCompatActivity {
         public void onSkipSong(Intent intent) {
             refreshProgress();
             Music music = intent.getExtras().getParcelable("music");
-
             refreshMusicInfo(music);
         }
 

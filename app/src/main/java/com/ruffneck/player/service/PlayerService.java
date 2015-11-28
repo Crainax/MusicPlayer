@@ -22,11 +22,11 @@ import android.widget.Toast;
 
 import com.ruffneck.player.R;
 import com.ruffneck.player.activity.MainActivity;
-import com.ruffneck.player.music.exception.NoMoreNextSongException;
-import com.ruffneck.player.music.exception.NoMorePreviousSongException;
 import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.MusicLoader;
-import com.ruffneck.player.music.queue.MusicLoopQueue;
+import com.ruffneck.player.music.exception.NoMoreNextSongException;
+import com.ruffneck.player.music.exception.NoMorePreviousSongException;
+import com.ruffneck.player.music.queue.MusicArrayQueue;
 import com.ruffneck.player.music.queue.MusicQueue;
 import com.ruffneck.player.task.LoadImageTask;
 import com.squareup.picasso.Picasso;
@@ -181,7 +181,7 @@ public class PlayerService extends Service implements Playable, Skipable {
         mPref = getSharedPreferences("config", MODE_PRIVATE);
 
         musicLoader = MusicLoader.getInstance(this);
-        musicQueue = new MusicLoopQueue(this);
+        musicQueue = new MusicArrayQueue(this);
 
 
         initMusic();
@@ -204,7 +204,6 @@ public class PlayerService extends Service implements Playable, Skipable {
         }
 
     }
-
 
     /**
      * Initialize the Notification to control the play state.

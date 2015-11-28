@@ -66,7 +66,7 @@ public class Music implements Parcelable {
         String regex = "(.*?) - (.*?)\\.mp3";
         Matcher matcher = Pattern.compile(regex).matcher(displayName);
 
-        while(matcher.find()){
+        while (matcher.find()) {
             String artist = matcher.group(1);
             String title = matcher.group(2);
 
@@ -78,7 +78,10 @@ public class Music implements Parcelable {
     }
 
     public String getAlbum() {
-        return album;
+        if (!album.equals("<unknown>"))
+            return album;
+        else
+            return "未知专辑";
     }
 
     public void setAlbum(String album) {
@@ -116,7 +119,7 @@ public class Music implements Parcelable {
 
     public void setArtist(String artist) {
 
-        if(this.artist != null )return;
+        if (this.artist != null) return;
 
         this.artist = artist;
     }
@@ -134,7 +137,7 @@ public class Music implements Parcelable {
     }
 
     public void setTitle(String title) {
-        if(this.title != null )return;
+        if (this.title != null) return;
         this.title = title;
     }
 

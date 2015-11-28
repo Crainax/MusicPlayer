@@ -4,10 +4,15 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Matrix;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -15,6 +20,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ruffneck.player.R;
+import com.ruffneck.player.music.Music;
 import com.ruffneck.player.music.exception.NoMoreNextSongException;
 import com.ruffneck.player.music.exception.NoMorePreviousSongException;
 import com.ruffneck.player.receiver.ProgressReceiver;
@@ -22,16 +28,11 @@ import com.ruffneck.player.service.CallBackServiceConnection;
 import com.ruffneck.player.service.Playable;
 import com.ruffneck.player.service.PlayerService;
 import com.ruffneck.player.service.Skipable;
+import com.ruffneck.player.task.LoadImageTask;
 import com.ruffneck.player.utils.FormatUtils;
 import com.ruffneck.player.utils.RuntimeUtils;
 import com.ruffneck.player.utils.SnackBarUtils;
 import com.squareup.picasso.Picasso;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
 
 
 public class PlayActivity extends AppCompatActivity {
@@ -40,12 +41,15 @@ public class PlayActivity extends AppCompatActivity {
     private ImageButton bt_next;
     private ImageButton bt_previous;
     private TextView tv_process;
-    private ImageView iv_singer;
+    private static ImageView iv_singer_big;
+    private static float mIvRotateDegree;
+    private static Matrix mIvMatrix;
+    private static boolean isActivted = false;
 
     private SeekBar sb_process;
 
     private MusicServiceConnection conn;
-    private Playable playable;
+    private static Playable playable;
     private Skipable skipable;
     private SharedPreferences mPref;
 
@@ -57,39 +61,71 @@ public class PlayActivity extends AppCompatActivity {
 
     private SeekBar.OnSeekBarChangeListener sbChangedListener;
     private View parentView;
+    private TextView tv_play_song_name;
+    private TextView tv_play_album;
+    private TextView tv_play_artist;
+    private Toolbar toolbar;
     //    private static PlayActivity pa;
 
-/*    public static class PlayHandler extends Handler {
+
+    public static class PlayHandler extends Handler {
+
+        //How long does the handler send a message to itself.
+        private static final long DELAY_SEND = 50;
+
+        //In case of too much message send in the same time.
+        private static boolean isHandling = false;
 
         @Override
         public void handleMessage(Message msg) {
+            //refuse all the message when the activity is inactivated.
+            if (!isActivted)
+                return;
+            //In case of too much message send in the same time.
+            if (isHandling)
+                return;
+            if (playable == null)
+                return;
+            if (!playable.isPlaying())
+                return;
+//            if(!iv_singer_big.isAttachedToWindow())
+//                return;
+            isHandling = true;
+//            iv_singer_big.setRotationX(iv_singer_big.getWidth() / 2);
+//            iv_singer_big.setRotationY(iv_singer_big.getHeight() / 2);
+            iv_singer_big.setRotation(mIvRotateDegree);
+            if (mIvRotateDegree < 360)
+                mIvRotateDegree += 0.5f;
+            else
+                mIvRotateDegree = 0;
 
-            Bundle data = msg.getData();
-            int duration = data.getInt("duration") / 1000;
-            int position = data.getInt("position") / 1000;
+            //In case of too much message send in the same time.
+            System.out.println("PlayHandler.handleMessage");
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(DELAY_SEND);
+                    } catch (InterruptedException ignored) {
+                    }
+                    isHandling = false;
 
-            sb_process.setProgress(position);
-            sb_process.setMax(duration);
-
-            int posSecond = position % 60;
-            int posMin = position / 60;
-            int durSecond = duration % 60;
-            int durMin = duration / 60;
-
-            tv_process.setText(pa.getString(R.string.play_process, posMin,
-                    posSecond, durMin, durSecond));
+                    sendEmptyMessage(1);
+                }
+            }).start();
 
             super.handleMessage(msg);
         }
 
-    }*/
+    }
 
-//    public static PlayHandler mHandler = new PlayHandler();
+    public PlayHandler mHandler = new PlayHandler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+
 
 //        pa = this;
 
@@ -98,11 +134,34 @@ public class PlayActivity extends AppCompatActivity {
 
         startAndBindService();
 
+
         //Initialize all the listener.
         initListener();
         //Initialize the button and all the views.
         initView();
 
+        initToolbar();
+    }
+
+    /**
+     * Initialize the toolbar.
+     */
+    private void initToolbar() {
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = getSupportActionBar();
+
+        assert actionBar != null;
+        actionBar.setTitle("Playing");
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
+    }
+
+    /**
+     * The method is used to the handler to refresh the CD's rotation.(because it's static.)
+     */
+    private void initCDView() {
+        isActivted = true;
     }
 
     /**
@@ -199,6 +258,7 @@ public class PlayActivity extends AppCompatActivity {
             filter.addAction(action);
         }
 
+        initCDView();
         registerReceiver(progressReceiver, filter);
     }
 
@@ -206,6 +266,8 @@ public class PlayActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         unregisterReceiver(progressReceiver);
+        //use to the handler to refresh the CD's rotation.(because it's static.)
+        isActivted = false;
     }
 
     /**
@@ -218,6 +280,11 @@ public class PlayActivity extends AppCompatActivity {
             playable = (Playable) service;
             skipable = (Skipable) service;
             boundCallback();
+            refreshMusicInfo(playable.getMusic());
+            //Refresh the CD
+            mHandler.sendEmptyMessage(1);
+            //Refresh the CDView's degree.
+            iv_singer_big.setRotation(mIvRotateDegree);
         }
 
         @Override
@@ -243,6 +310,7 @@ public class PlayActivity extends AppCompatActivity {
         bt_pause = (ImageButton) findViewById(R.id.bt_pause);
         bt_pause.setOnClickListener(playOnClickListener);
 
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         bt_next = (ImageButton) findViewById(R.id.bt_next);
         bt_next.setOnClickListener(nextOnClickListener);
@@ -255,7 +323,11 @@ public class PlayActivity extends AppCompatActivity {
 
         tv_process = (TextView) findViewById(R.id.tv_process);
 
-        iv_singer = (ImageView) findViewById(R.id.iv_singer_big);
+        iv_singer_big = (ImageView) findViewById(R.id.iv_singer_big);
+
+        tv_play_song_name = (TextView) findViewById(R.id.tv_play_song_name);
+        tv_play_artist = (TextView) findViewById(R.id.tv_play_artist);
+        tv_play_album = (TextView) findViewById(R.id.tv_play_album);
 
         refreshProgress();
     }
@@ -281,8 +353,53 @@ public class PlayActivity extends AppCompatActivity {
         super.onDestroy();
 //        Toast.makeText(PlayActivity.this, "Destroy", Toast.LENGTH_SHORT).show();
         unbindService(conn);
+
+
     }
 
+
+    /**
+     * Set the Music information by the music received by the service.
+     *
+     * @param music
+     */
+    private void refreshMusicInfo(Music music) {
+
+        if (music == null) return;
+
+        tv_play_song_name.setText(music.getTitle());
+        tv_play_artist.setText(music.getArtist());
+        tv_play_album.setText(music.getAlbum());
+
+        //Update the singer's image.
+        LoadImageTask task = new LoadImageTask(this);
+        task.setUpdateCallBack(new LoadImageTask.UpdateCallBack() {
+            @Override
+            public void onUpdate(Music music) {
+                Picasso.with(PlayActivity.this)
+                        .load(music.getImgUrl())
+                        .error(R.drawable.cd)
+                        .placeholder(R.drawable.cd)
+                        .centerCrop()
+                        .fit()
+                        .into(iv_singer_big);
+            }
+        });
+
+        task.setUpdateFailCallBack(new LoadImageTask.UpdateFailCallBack() {
+            @Override
+            public void onUpdateFail(Music music) {
+                Picasso.with(PlayActivity.this)
+                        .load(R.drawable.cd)
+                        .centerCrop()
+                        .fit()
+                        .into(iv_singer_big);
+            }
+        });
+
+
+        task.execute(playable.getMusic());
+    }
 
     /**
      * The Receiver is used to update the current progress.
@@ -294,23 +411,36 @@ public class PlayActivity extends AppCompatActivity {
 
             bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
 
+            //Refresh the CD
+            mHandler.sendEmptyMessage(1);
         }
 
         @Override
         public void onPause(Intent intent) {
             bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
+
+            //Refresh the CD
+            mHandler.sendEmptyMessage(1);
         }
 
         @Override
         public void onPlay(Intent intent) {
 
             bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
+            //Refresh the CD
+            mHandler.sendEmptyMessage(1);
         }
 
         @Override
         public void onSkipSong(Intent intent) {
             refreshProgress();
+            Music music = intent.getExtras().getParcelable("music");
+            refreshMusicInfo(music);
+            //Refresh the CD
+            mHandler.sendEmptyMessage(1);
+            mIvRotateDegree = 0;
         }
+
 
         @Override
         public void onUpdatePosition(Intent intent) {
@@ -332,7 +462,7 @@ public class PlayActivity extends AppCompatActivity {
 
     }
 
-    public void loadImage(View view){
+/*    public void loadImage(View view){
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -360,5 +490,5 @@ public class PlayActivity extends AppCompatActivity {
         };
 
         new Thread(runnable).start();
-    }
+    }*/
 }

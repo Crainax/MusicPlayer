@@ -100,7 +100,6 @@ public class PlayActivity extends AppCompatActivity {
                 mIvRotateDegree = 0;
 
             //In case of too much message send in the same time.
-            System.out.println("PlayHandler.handleMessage");
             new Thread(new Runnable() {
                 @Override
                 public void run() {

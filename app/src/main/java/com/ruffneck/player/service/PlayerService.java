@@ -188,6 +188,9 @@ public class PlayerService extends Service implements Playable, Skipable {
 
         initNotification();
 
+        //Start the telephony calling listener.
+        Intent intent = new Intent(this, TelephonyService.class);
+        startService(intent);
     }
 
     private void initMusic() {
@@ -420,6 +423,11 @@ public class PlayerService extends Service implements Playable, Skipable {
 //        System.out.println("PlayerService.onDestroy");
         timer.cancel();
         timer = null;
+
+
+        //stop the telephony calling listener.
+        Intent intent = new Intent(this, TelephonyService.class);
+        stopService(intent);
     }
 
     public void addTimer() {

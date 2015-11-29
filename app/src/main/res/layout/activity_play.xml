@@ -95,7 +95,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:background="@drawable/shape_buttom"
+                android:background="@drawable/ripple_circle"
                 android:padding="6dp"
                 android:src="@drawable/ic_skip_previous_black_48dp" />
         </RelativeLayout>
@@ -111,7 +111,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:background="@drawable/shape_buttom"
+                android:background="@drawable/ripple_circle"
                 android:padding="10dp"
                 android:src="@drawable/ic_play_arrow_black_48dp" />
         </RelativeLayout>
@@ -127,7 +127,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:background="@drawable/shape_buttom"
+                android:background="@drawable/ripple_circle"
                 android:padding="6dp"
                 android:src="@drawable/ic_skip_next_black_48dp" />
         </RelativeLayout>

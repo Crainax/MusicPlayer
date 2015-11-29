@@ -24,7 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private MusicServiceConnection conn;
     private TextView tv_bottom_song_name;
     private TextView tv_bottom_artist;
-    private Button bt_pause;
+    private ImageButton bt_pause;
     private ImageView iv_bottom_singer;
 
     private View.OnClickListener playOnClickListener;
@@ -248,8 +248,8 @@ public class MainActivity extends AppCompatActivity {
         tv_bottom_artist = (TextView) stateBar.findViewById(R.id.tv_bottom_artist);
         iv_bottom_singer = (ImageView) stateBar.findViewById(R.id.iv_bottom_singer);
 
-        bt_pause = (Button) stateBar.findViewById(R.id.bt_bottom_pause);
-        Button bt_next = (Button) stateBar.findViewById(R.id.bt_bottom_next);
+        bt_pause = (ImageButton) stateBar.findViewById(R.id.bt_bottom_pause);
+        ImageButton bt_next = (ImageButton) stateBar.findViewById(R.id.bt_bottom_next);
         bt_next.setOnClickListener(nextOnClickListener);
         bt_pause.setOnClickListener(playOnClickListener);
         sb_process.setOnSeekBarChangeListener(sbChangedListener);
@@ -568,21 +568,21 @@ public class MainActivity extends AppCompatActivity {
         public void onContinuePlay(Intent intent) {
 
             String pause = getString(R.string.bt_pause);
-            bt_pause.setText(pause);
+            bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
 
         }
 
         @Override
         public void onPause(Intent intent) {
             String play = getString(R.string.bt_play);
-            bt_pause.setText(play);
+            bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
         }
 
         @Override
         public void onPlay(Intent intent) {
 
             String pause = getString(R.string.bt_pause);
-            bt_pause.setText(pause);
+            bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
         }
 
 
@@ -652,9 +652,9 @@ public class MainActivity extends AppCompatActivity {
         public void boundCallback() {
             if (RuntimeUtils.isServiceRunning(MainActivity.this, PlayerService.class))
                 if (playable.isPlaying())
-                    bt_pause.setText(getString(R.string.bt_pause));
+                    bt_pause.setImageResource(R.drawable.ic_pause_black_48dp);
                 else
-                    bt_pause.setText(getString(R.string.bt_play));
+                    bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
             refreshProgress();
             refreshMusicInfo(playable.getMusic());
         }

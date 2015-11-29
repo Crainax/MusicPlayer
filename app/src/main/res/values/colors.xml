@@ -9,4 +9,8 @@
     <color name="colorAccentTranslucent">#aaFF80AB</color>
     <color name="colorDivider">#afff</color>
     <color name="colorSnackBar">#323232</color>
+    <color name="colorActivated">#ff7700</color>
+    <color name="colorActivatedAccent">#ffB468</color>
+    <color name="colorPlaying">#eee</color>
+    <color name="colorPlayingPress">#ccc</color>
 </resources>

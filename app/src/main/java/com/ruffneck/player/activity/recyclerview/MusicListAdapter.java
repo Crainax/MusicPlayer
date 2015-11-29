@@ -20,6 +20,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MusicViewHolder> {
 
+    private int highLightItem = 0;
+
     List<Music> musics;
 
     OnItemClickListener mOnItemClickListener;
@@ -39,9 +41,24 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
     }
 
     @Override
-    public MusicViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public int getItemViewType(int position) {
+        if (!(position == highLightItem))
+            return 0;
+        else
+            return 1;
+    }
 
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list_music, parent, false);
+    @Override
+    public MusicViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view;
+        switch (viewType) {
+            case 1:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list_playing, parent, false);
+                break;
+            default:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list_music, parent, false);
+                break;
+        }
 
         return new MusicViewHolder(view);
     }
@@ -111,7 +128,7 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
             holder.bt_item_more.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnItemClickListener.onLongClickListener(v,position);
+                    mOnItemClickListener.onLongClickListener(v, position);
                 }
             });
         }
@@ -141,4 +158,17 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
         }
     }
 
+    public int getHighLightItem() {
+        return highLightItem;
+    }
+
+    public void setHighLightMusic(Music highLightMusic) {
+        this.highLightItem = musics.indexOf(highLightMusic);
+        notifyItemChanged(highLightItem);
+    }
+
+    public void notifyDataSetChanged(Music highLightMusic){
+        setHighLightMusic(highLightMusic);
+        notifyDataSetChanged();
+    }
 }

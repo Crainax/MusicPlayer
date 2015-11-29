@@ -441,18 +441,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new NameComparator());
-                musicAdapter.notifyDataSetChanged();
+                musicAdapter.notifyDataSetChanged(playable.getMusic());
                 popup.dismiss();
                 SnackBarUtils.showStringSnackBar(rv_list,
                         ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
-
             }
         });
         tv_sequence_date.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new DateComparator());
-                musicAdapter.notifyDataSetChanged();
+                musicAdapter.notifyDataSetChanged(playable.getMusic());
                 popup.dismiss();
                 SnackBarUtils.showStringSnackBar(rv_list,
                         ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
@@ -462,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new DurationComparator());
-                musicAdapter.notifyDataSetChanged();
+                musicAdapter.notifyDataSetChanged(playable.getMusic());
                 popup.dismiss();
                 SnackBarUtils.showStringSnackBar(rv_list,
                         ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
@@ -472,7 +471,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 musicLoader.setComparator(new ArtistComparator());
-                musicAdapter.notifyDataSetChanged();
+                musicAdapter.notifyDataSetChanged(playable.getMusic());
                 popup.dismiss();
                 SnackBarUtils.showStringSnackBar(rv_list,
                         ((TextView) v).getText().toString(), Snackbar.LENGTH_SHORT);
@@ -642,7 +641,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            task.execute(playable.getMusic());
+            task.execute(music);
+
+            //Update the highlight color of the adapter.
+            musicAdapter.setHighLightMusic(music);
         }
     }
 
@@ -657,6 +659,7 @@ public class MainActivity extends AppCompatActivity {
                     bt_pause.setImageResource(R.drawable.ic_play_arrow_black_48dp);
             refreshProgress();
             refreshMusicInfo(playable.getMusic());
+            musicAdapter.setHighLightMusic(playable.getMusic());
         }
 
         @Override
